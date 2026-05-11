@@ -370,6 +370,7 @@ input.date-input {
       <button class="tab-btn active" onclick="switchTab('tasks',this)">工作項目追蹤</button>
       <button class="tab-btn"        onclick="switchTab('gantt',this)">時程甘特圖</button>
       <button class="tab-btn"        onclick="switchTab('push',this)">每月推播排程</button>
+      <button class="tab-btn"        onclick="switchTab('budget',this)">💰 預算控管</button>
     </div>
   </div>
 
@@ -411,6 +412,49 @@ input.date-input {
       </div>
     </div>
 
+    <!-- Budget -->
+    <div id="tab-budget" class="tab-pane">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;">
+        <div style="background:linear-gradient(135deg,#1a73e8,#0d47a1);color:white;border-radius:10px;padding:16px;">
+          <div style="font-size:13px;opacity:0.85">📊 總預算</div>
+          <div style="font-size:22px;font-weight:700;margin-top:6px">NT$ 3,500,000</div>
+          <div style="font-size:11px;opacity:0.75;margin-top:4px">依 PDF 預算經費</div>
+        </div>
+        <div style="background:white;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+          <div style="font-size:13px;color:#666">💵 預估合計</div>
+          <div style="font-size:22px;font-weight:700;color:#1a73e8;margin-top:6px" id="bgEstSum">NT$ 0</div>
+          <div style="font-size:11px;color:#999;margin-top:4px" id="bgEstRatio">佔總預算 0%</div>
+        </div>
+        <div style="background:white;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+          <div style="font-size:13px;color:#666">💸 實際花費</div>
+          <div style="font-size:22px;font-weight:700;color:#fb8c00;margin-top:6px" id="bgActSum">NT$ 0</div>
+          <div style="font-size:11px;color:#999;margin-top:4px" id="bgActRatio">佔總預算 0%</div>
+        </div>
+        <div style="background:white;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+          <div style="font-size:13px;color:#666">💰 預算餘額</div>
+          <div style="font-size:22px;font-weight:700;color:#43a047;margin-top:6px" id="bgRemain">NT$ 3,500,000</div>
+          <div style="font-size:11px;color:#999;margin-top:4px">總預算 − 實際花費</div>
+        </div>
+      </div>
+
+      <table class="push-table" id="budgetTable">
+        <thead>
+          <tr>
+            <th style="width:35%">項目</th>
+            <th style="width:15%">預估預算</th>
+            <th style="width:15%">實際花費</th>
+            <th style="width:12%">差額</th>
+            <th>備註</th>
+            <th style="width:60px">操作</th>
+          </tr>
+        </thead>
+        <tbody id="budgetBody"></tbody>
+      </table>
+      <div style="margin-top:12px;text-align:right">
+        <button class="btn btn-primary" onclick="addBudgetRow()">＋ 新增預算項目</button>
+      </div>
+    </div>
+
     <!-- Push -->
     <div id="tab-push" class="tab-pane">
       <table class="push-table">
@@ -449,6 +493,17 @@ input.date-input {
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modalLink')">取消</button>
       <button class="btn btn-primary"   onclick="confirmLink()">新增</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalAssignee">
+  <div class="modal-box">
+    <div class="modal-title">👥 選擇負責人（可複選）</div>
+    <div id="assigneeCheckList" style="max-height:300px;overflow-y:auto;border:1px solid #eee;border-radius:8px;padding:4px 8px;margin-bottom:12px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalAssignee')">取消</button>
+      <button class="btn btn-primary" onclick="confirmAssignee()">確定</button>
     </div>
   </div>
 </div>
@@ -695,6 +750,17 @@ async function tryRestoreSession() {
 // ════════════════════════════════════════════════
 // DATA LOAD / SAVE
 // ════════════════════════════════════════════════
+const DEFAULT_BUDGET = [
+  {item:'人事費（管理費）',                   estimated:0, actual:0, note:''},
+  {item:'推播素材製作費（72 件）',             estimated:0, actual:0, note:''},
+  {item:'4 場宣導活動費（含獎品 ≥ 40 萬）',    estimated:400000, actual:0, note:'PDF 規定'},
+  {item:'量六力記者會（1 場）',                estimated:0, actual:0, note:''},
+  {item:'短影音/代言人影片製作費',             estimated:0, actual:0, note:''},
+  {item:'媒體通路託播（≥5 項網媒）',           estimated:0, actual:0, note:''},
+  {item:'ICOPE 視覺 / 圖文 / 影片設計',         estimated:0, actual:0, note:''},
+  {item:'其他雜支',                            estimated:0, actual:0, note:''},
+];
+
 async function loadData() {
   setSyncState('saving');
   const [data, users] = await Promise.all([
@@ -702,6 +768,11 @@ async function loadData() {
     apiGet('/api/users').catch(() => null),
   ]);
   D = data;
+  // 向後相容：舊資料沒有 budget 欄位則初始化（不覆蓋已有的）
+  if (!Array.isArray(D.budget)) {
+    D.budget = JSON.parse(JSON.stringify(DEFAULT_BUDGET));
+    scheduleSave(); // 把新欄位寫回伺服器一次
+  }
   if (users && Array.isArray(users)) assignees = users.map(u => u.name);
   setOffline(false);
   setSyncState('saved');
@@ -872,6 +943,131 @@ function render() {
   renderTasks();
   renderGantt();
   renderPush();
+  renderBudget();
+}
+
+// 把 assignee 統一為陣列 / 文字
+function aArr(a)  { return Array.isArray(a) ? a : (a ? [a] : []); }
+function aText(a) { const arr = aArr(a); return arr.length ? arr.join(', ') : '—'; }
+
+let assigneeTarget = null;
+function openAssigneePicker(type, key) {
+  assigneeTarget = { type, key };
+  const current = type === 'task'
+    ? D.tasks.find(t => t.id === key).assignee
+    : D.pushSchedule[key].assignee;
+  const arr = aArr(current);
+  document.getElementById('assigneeCheckList').innerHTML = assignees.map(n => `
+    <label style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:15px">
+      <input type="checkbox" value="${escH(n)}" ${arr.includes(n)?'checked':''} style="width:18px;height:18px;cursor:pointer">
+      ${escH(n)}
+    </label>
+  `).join('');
+  document.getElementById('modalAssignee').classList.add('open');
+}
+function confirmAssignee() {
+  if (!assigneeTarget) return;
+  const checked = [...document.querySelectorAll('#assigneeCheckList input:checked')].map(c => c.value);
+  const { type, key } = assigneeTarget;
+  if (type === 'task') {
+    const t = D.tasks.find(x => x.id === key);
+    if (t) t.assignee = checked;
+    const el = document.getElementById('ti-' + key);
+    if (el && t) el.replaceWith(buildTaskEl(t));
+  } else {
+    D.pushSchedule[key].assignee = checked;
+    renderPush();
+  }
+  scheduleSave();
+  renderGantt();
+  closeModal('modalAssignee');
+}
+
+function fmtMoney(n) {
+  const num = Number(n) || 0;
+  return 'NT$ ' + num.toLocaleString('en-US');
+}
+
+function renderBudget() {
+  const tbody = document.getElementById('budgetBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  const TOTAL = 3500000;
+  let est = 0, act = 0;
+  (D.budget || []).forEach((row, i) => {
+    est += Number(row.estimated) || 0;
+    act += Number(row.actual)    || 0;
+    const diff = (Number(row.estimated)||0) - (Number(row.actual)||0);
+    const diffColor = diff < 0 ? '#e53935' : (diff === 0 ? '#888' : '#43a047');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="editable" data-bidx="${i}" data-bf="item"
+        contenteditable="false" onclick="startEdit(this)" onblur="endBudgetEdit(this)" onkeydown="editKey(event,this)"
+        style="display:block;min-width:150px">${escH(row.item)}</span></td>
+      <td><input type="number" class="date-input" style="width:130px;text-align:right" min="0" step="1000"
+          value="${row.estimated||0}" onchange="saveBudgetField(${i},'estimated',this.value)"></td>
+      <td><input type="number" class="date-input" style="width:130px;text-align:right" min="0" step="1000"
+          value="${row.actual||0}"    onchange="saveBudgetField(${i},'actual',this.value)"></td>
+      <td style="color:${diffColor};font-weight:600">${fmtMoney(diff)}</td>
+      <td><span class="editable" data-bidx="${i}" data-bf="note"
+        contenteditable="false" onclick="startEdit(this)" onblur="endBudgetEdit(this)" onkeydown="editKey(event,this)"
+        data-ph="—" style="display:block;min-width:80px">${escH(row.note)||''}</span></td>
+      <td><button class="act-btn del" onclick="deleteBudgetRow(${i})">🗑</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  // 合計列
+  const tr = document.createElement('tr');
+  tr.style.background = '#f8f9fa';
+  tr.style.fontWeight = '600';
+  tr.innerHTML = `
+    <td>合計</td>
+    <td style="color:#1a73e8">${fmtMoney(est)}</td>
+    <td style="color:#fb8c00">${fmtMoney(act)}</td>
+    <td style="color:${(est-act)<0?'#e53935':'#43a047'}">${fmtMoney(est-act)}</td>
+    <td colspan="2" style="color:#888;font-size:13px">總預算剩餘：<strong style="color:${(TOTAL-act)<0?'#e53935':'#43a047'}">${fmtMoney(TOTAL-act)}</strong></td>
+  `;
+  tbody.appendChild(tr);
+
+  // 上方統計卡更新
+  document.getElementById('bgEstSum').textContent   = fmtMoney(est);
+  document.getElementById('bgActSum').textContent   = fmtMoney(act);
+  document.getElementById('bgRemain').textContent   = fmtMoney(TOTAL - act);
+  document.getElementById('bgEstRatio').textContent = `佔總預算 ${TOTAL ? Math.round(est/TOTAL*100) : 0}%`;
+  document.getElementById('bgActRatio').textContent = `佔總預算 ${TOTAL ? Math.round(act/TOTAL*100) : 0}%`;
+}
+
+function saveBudgetField(idx, field, val) {
+  if (!D.budget) D.budget = [];
+  if (field === 'estimated' || field === 'actual') val = Number(val) || 0;
+  D.budget[idx][field] = val;
+  scheduleSave();
+  renderBudget();
+}
+
+function endBudgetEdit(el) {
+  el.contentEditable = 'false';
+  const idx   = parseInt(el.dataset.bidx);
+  const field = el.dataset.bf;
+  const val   = el.innerText.replace(/\n/g,' ').trim();
+  if (!D.budget || D.budget[idx][field] === val) return;
+  D.budget[idx][field] = val;
+  scheduleSave();
+  renderBudget();
+}
+
+function addBudgetRow() {
+  if (!D.budget) D.budget = [];
+  D.budget.push({ item: '新項目', estimated: 0, actual: 0, note: '' });
+  scheduleSave();
+  renderBudget();
+}
+
+function deleteBudgetRow(idx) {
+  if (!confirm('確定刪除這筆預算項目？')) return;
+  D.budget.splice(idx, 1);
+  scheduleSave();
+  renderBudget();
 }
 
 function renderProgress() {
@@ -939,9 +1135,10 @@ function buildTaskEl(task) {
       </div>
       <div class="task-meta">
         <span class="meta-item">👤
-          <select class="sel" onchange="saveTaskField(${task.id},'assignee',this.value)">
-            ${assignees.map(n => `<option value="${n}" ${task.assignee===n?'selected':''}>${n}</option>`).join('')}
-          </select>
+          <span class="editable" onclick="openAssigneePicker('task',${task.id})"
+            style="background:#e8f0fe;color:#1a73e8;padding:2px 10px;border-radius:12px;cursor:pointer">
+            ${escH(aText(task.assignee))} ▾
+          </span>
         </span>
         <span class="meta-item">📅
           <input type="date" class="date-input" value="${task.startDate||''}" onchange="saveTaskField(${task.id},'startDate',this.value)">
@@ -981,7 +1178,7 @@ function renderGantt() {
     tr.innerHTML = `
       <td class="g-phase">${task.phase.replace('第','').replace('期','')}</td>
       <td class="g-task">${escH(task.task)}</td>
-      <td style="text-align:center;font-size:14px">${escH(task.assignee)}</td>
+      <td style="text-align:center;font-size:14px">${escH(aText(task.assignee))}</td>
       ${cells}
     `;
     tbody.appendChild(tr);
@@ -1009,9 +1206,10 @@ function renderPush() {
         contenteditable="false" onclick="startEdit(this)" onblur="endPushEdit(this)" onkeydown="editKey(event,this)"
       >${escH(row['後台deadline'])}</span></td>
       <td>
-        <select class="sel" onchange="savePushField(${i},'assignee',this.value)">
-          ${assignees.map(n => `<option value="${n}" ${row.assignee===n?'selected':''}>${n}</option>`).join('')}
-        </select>
+        <span class="editable" onclick="openAssigneePicker('push',${i})"
+          style="background:#e8f0fe;color:#1a73e8;padding:3px 10px;border-radius:12px;cursor:pointer;display:inline-block">
+          ${escH(aText(row.assignee))} ▾
+        </span>
       </td>
       <td><span class="status-badge ${row.status}" style="cursor:pointer" onclick="cyclePush(${i})">${STATUS_LABELS[row.status]}</span></td>
       <td><span class="editable" data-pidx="${i}" data-pf="note"
@@ -1098,7 +1296,7 @@ function cyclePush(idx) {
 function addTask(phase) {
   const id = D.config.nextId++;
   D.tasks.push({ id, phase, task: '新任務', status: 'not_started',
-    assignee: currentUser.name, startDate: '', endDate: '', note: '',
+    assignee: [currentUser.name], startDate: '', endDate: '', note: '',
     ganttStart: null, ganttEnd: null, links: [], logs: [] });
   scheduleSave();
   renderTasks(); renderGantt(); renderProgress(); renderFilterCounts();
