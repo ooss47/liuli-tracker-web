@@ -498,7 +498,7 @@ input.date-input {
         <thead>
           <tr>
             <th>月份</th><th>件數</th><th>主題方向</th>
-            <th>送審截止</th><th>後台完成</th><th>負責人</th><th>狀態</th><th>備註</th><th>📎 內容</th>
+            <th>送審截止</th><th>後台完成</th><th>負責人</th><th>狀態</th><th>備註</th><th style="text-align:center">國健署<br>審核完成</th><th style="text-align:center">LINE OA<br>建置完成</th><th>📎 內容</th>
           </tr>
         </thead>
         <tbody id="pushBody"></tbody>
@@ -1338,10 +1338,23 @@ function renderPush() {
         contenteditable="false" onclick="startEdit(this)" onblur="endPushEdit(this)" onkeydown="editKey(event,this)"
         data-ph="—"
       >${escH(row.note)||''}</span></td>
+      <td style="text-align:center">
+        <input type="checkbox" ${row.nhsApproved?'checked':''} onchange="togglePushCheck(${i},'nhsApproved',this.checked)"
+          style="width:20px;height:20px;cursor:pointer;accent-color:#1a73e8" title="國健署審核完成">
+      </td>
+      <td style="text-align:center">
+        <input type="checkbox" ${row.lineUploaded?'checked':''} onchange="togglePushCheck(${i},'lineUploaded',this.checked)"
+          style="width:20px;height:20px;cursor:pointer;accent-color:#43a047" title="LINE OA 建置完成">
+      </td>
       <td>${renderPushContentCell(row, i)}</td>
     `;
     tbody.appendChild(tr);
   });
+}
+
+function togglePushCheck(idx, field, val) {
+  D.pushSchedule[idx][field] = val;
+  scheduleSave();
 }
 
 function renderPushContentCell(row, i) {
