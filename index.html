@@ -372,6 +372,8 @@ input.date-input {
       <button class="tab-btn"        onclick="switchTab('gantt',this)">時程甘特圖</button>
       <button class="tab-btn"        onclick="switchTab('push',this)">每月推播排程</button>
       <button class="tab-btn"        onclick="switchTab('budget',this)">💰 預算控管</button>
+      <button class="tab-btn"        onclick="switchTab('meetings',this)">📋 會議記錄</button>
+      <button class="tab-btn"        onclick="switchTab('docs',this)">📄 公文記錄</button>
     </div>
   </div>
 
@@ -454,9 +456,43 @@ input.date-input {
       <div style="margin-top:12px;text-align:right">
         <button class="btn btn-primary" onclick="addBudgetRow()">＋ 新增預算項目</button>
       </div>
+
+      <!-- 費用明細 -->
+      <div style="margin-top:28px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-weight:700;font-size:15px;color:#333">📑 費用明細紀錄 &nbsp;<span style="font-size:13px;color:#aaa;font-weight:400">（報價單 / 實際花費 / 匯款狀態）</span></span>
+          <button class="act-btn" style="font-size:14px;padding:6px 14px" onclick="openExpenseModal()">＋ 新增費用明細</button>
+        </div>
+        <table class="push-table">
+          <thead><tr><th>日期</th><th>預算項目</th><th>廠商</th><th>報價金額</th><th>實際花費</th><th>報價單</th><th>匯款狀態</th><th>匯款日期</th><th>備註</th><th>操作</th></tr></thead>
+          <tbody id="expenseBody"></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Push -->
+    <div id="tab-meetings" class="tab-pane">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <span style="font-weight:600;color:#333;font-size:15px">共 <span id="meetCount">0</span> 筆會議記錄</span>
+        <button class="act-btn" style="font-size:14px;padding:6px 14px" onclick="openMeetingModal()">＋ 新增會議記錄</button>
+      </div>
+      <table class="push-table">
+        <thead><tr><th>日期</th><th>會議主題</th><th>出席人員</th><th>決議事項</th><th>後續行動</th><th>操作</th></tr></thead>
+        <tbody id="meetingBody"></tbody>
+      </table>
+    </div>
+
+    <div id="tab-docs" class="tab-pane">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <span style="font-weight:600;color:#333;font-size:15px">共 <span id="docCount">0</span> 筆公文記錄</span>
+        <button class="act-btn" style="font-size:14px;padding:6px 14px" onclick="openDocModal()">＋ 新增公文記錄</button>
+      </div>
+      <table class="push-table">
+        <thead><tr><th>日期</th><th>文號</th><th>方向</th><th>主旨</th><th>狀態</th><th>備註</th><th>操作</th></tr></thead>
+        <tbody id="docBody"></tbody>
+      </table>
+    </div>
+
     <div id="tab-push" class="tab-pane">
       <table class="push-table">
         <thead>
@@ -540,6 +576,81 @@ input.date-input {
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modalLog')">取消</button>
       <button class="btn btn-primary"   onclick="confirmLog()">新增</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalExpense">
+  <div class="modal-box" style="max-width:580px">
+    <div class="modal-title">📑 費用明細</div>
+    <div class="form-group"><label>日期</label><input id="mExpDate" type="date"></div>
+    <div class="form-group"><label>預算項目</label>
+      <select id="mExpCategory" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-family:inherit;font-size:14px">
+        <option value="">-- 選擇項目 --</option>
+      </select>
+    </div>
+    <div class="form-group"><label>廠商名稱</label><input id="mExpVendor" type="text" placeholder="例：虎鯨多媒體"></div>
+    <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div><label>報價金額 (NT$)</label><input id="mExpQuoted" type="number" min="0" placeholder="0"></div>
+      <div><label>實際花費 (NT$)</label><input id="mExpActual" type="number" min="0" placeholder="0"></div>
+    </div>
+    <div class="form-group"><label>報價單連結</label><input id="mExpQuoteLink" type="url" placeholder="https://…（Google Drive 或其他連結）"></div>
+    <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div><label>匯款狀態</label>
+        <select id="mExpPaid" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-family:inherit;font-size:14px">
+          <option value="未匯款">未匯款</option>
+          <option value="已匯款">已匯款</option>
+          <option value="部分匯款">部分匯款</option>
+        </select>
+      </div>
+      <div><label>匯款日期</label><input id="mExpPaidDate" type="date"></div>
+    </div>
+    <div class="form-group"><label>備註</label><input id="mExpNote" type="text" placeholder="補充說明…"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalExpense')">取消</button>
+      <button class="btn btn-primary" onclick="confirmExpense()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalMeeting">
+  <div class="modal-box" style="max-width:580px">
+    <div class="modal-title">📋 會議記錄</div>
+    <div class="form-group"><label>日期</label><input id="mMeetDate" type="date"></div>
+    <div class="form-group"><label>會議主題</label><input id="mMeetTitle" type="text" placeholder="例：第1場專家會議"></div>
+    <div class="form-group"><label>出席人員</label><input id="mMeetAttendees" type="text" placeholder="例：Tina、Joey、CC"></div>
+    <div class="form-group"><label>決議事項</label><textarea id="mMeetDecisions" placeholder="本次會議決議…" rows="3"></textarea></div>
+    <div class="form-group"><label>後續行動</label><textarea id="mMeetActions" placeholder="待辦事項、負責人…" rows="3"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalMeeting')">取消</button>
+      <button class="btn btn-primary" onclick="confirmMeeting()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalDoc">
+  <div class="modal-box" style="max-width:580px">
+    <div class="modal-title">📄 公文記錄</div>
+    <div class="form-group"><label>日期</label><input id="mDocDate" type="date"></div>
+    <div class="form-group"><label>文號</label><input id="mDocNo" type="text" placeholder="例：衛部國字第1150001234號"></div>
+    <div class="form-group"><label>方向</label>
+      <select id="mDocDir" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-family:inherit;font-size:14px">
+        <option value="in">📥 收文（來文）</option>
+        <option value="out">📤 發文（去文）</option>
+      </select>
+    </div>
+    <div class="form-group"><label>主旨</label><textarea id="mDocSubject" placeholder="公文主旨…" rows="3"></textarea></div>
+    <div class="form-group"><label>狀態</label>
+      <select id="mDocStatus" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-family:inherit;font-size:14px">
+        <option value="處理中">處理中</option>
+        <option value="待回覆">待回覆</option>
+        <option value="已結案">已結案</option>
+      </select>
+    </div>
+    <div class="form-group"><label>備註</label><input id="mDocNote" type="text" placeholder="補充說明…"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalDoc')">取消</button>
+      <button class="btn btn-primary" onclick="confirmDoc()">儲存</button>
     </div>
   </div>
 </div>
@@ -772,8 +883,11 @@ async function loadData() {
   // 向後相容：舊資料沒有 budget 欄位則初始化（不覆蓋已有的）
   if (!Array.isArray(D.budget)) {
     D.budget = JSON.parse(JSON.stringify(DEFAULT_BUDGET));
-    scheduleSave(); // 把新欄位寫回伺服器一次
+    scheduleSave();
   }
+  if (!Array.isArray(D.meetings)) D.meetings = [];
+  if (!Array.isArray(D.docs))     D.docs = [];
+  if (!Array.isArray(D.expenses)) D.expenses = [];
   if (users && Array.isArray(users)) assignees = users.map(u => u.name);
   setOffline(false);
   setSyncState('saved');
@@ -790,7 +904,7 @@ async function pushData() {
   if (isSaving) { setTimeout(pushData, 500); return; }
   isSaving = true;
   try {
-    await apiPost('/api/data', { tasks: D.tasks, pushSchedule: D.pushSchedule, config: D.config });
+    await apiPost('/api/data', { tasks: D.tasks, pushSchedule: D.pushSchedule, config: D.config, meetings: D.meetings, docs: D.docs, expenses: D.expenses });
     setOffline(false);
     setSyncState('saved');
   } catch(ex) {
@@ -945,6 +1059,9 @@ function render() {
   renderGantt();
   renderPush();
   renderBudget();
+  renderMeetings();
+  renderDocs();
+  renderExpenses();
 }
 
 // 把 assignee 統一為陣列 / 文字
@@ -1475,6 +1592,235 @@ async function confirmReset() {
   } catch(ex) {
     alert('重設失敗：伺服器未提供重設功能，請聯繫管理員');
   }
+}
+
+// ════════════════════════════════════════════════
+// EXPENSE RECORDS
+// ════════════════════════════════════════════════
+let pendingExpenseId = null;
+const PAID_COLOR = { '已匯款':'#43a047', '未匯款':'#e53935', '部分匯款':'#fb8c00' };
+
+function renderExpenses() {
+  const tbody = document.getElementById('expenseBody');
+  if (!tbody) return;
+  const expenses = D.expenses || [];
+  const rows = expenses.slice().sort((a,b) => b.date.localeCompare(a.date));
+  const fmt = n => n != null && n !== '' ? 'NT$ ' + Number(n).toLocaleString() : '—';
+  tbody.innerHTML = rows.length ? rows.map(e => `
+    <tr>
+      <td style="white-space:nowrap">${escH(e.date)}</td>
+      <td>${escH(e.category)}</td>
+      <td>${escH(e.vendor)}</td>
+      <td style="text-align:right">${fmt(e.quotedAmount)}</td>
+      <td style="text-align:right;font-weight:600">${fmt(e.actualAmount)}</td>
+      <td style="text-align:center">${e.quoteLink ? `<a href="${escH(e.quoteLink)}" target="_blank" style="color:#1a73e8;text-decoration:none">📎 檢視</a>` : '—'}</td>
+      <td style="white-space:nowrap;font-weight:600;color:${PAID_COLOR[e.paid]||'#666'}">${escH(e.paid)}</td>
+      <td style="white-space:nowrap">${escH(e.paidDate)||'—'}</td>
+      <td style="max-width:140px">${escH(e.note)}</td>
+      <td style="white-space:nowrap">
+        <button class="act-btn" onclick="openExpenseModal(${e.id})">✏️</button>
+        <button class="act-btn del" onclick="deleteExpense(${e.id})">🗑</button>
+      </td>
+    </tr>`).join('')
+    : '<tr><td colspan="10" style="text-align:center;color:#aaa;padding:24px">尚無費用明細</td></tr>';
+}
+
+function openExpenseModal(id) {
+  pendingExpenseId = id || null;
+  const e = id ? (D.expenses||[]).find(x => x.id === id) : null;
+  // 填入預算項目下拉
+  const sel = document.getElementById('mExpCategory');
+  const cats = (D.budget||[]).map(r => r.item).filter(Boolean);
+  sel.innerHTML = '<option value="">-- 選擇項目 --</option>' +
+    cats.map(c => `<option value="${escH(c)}" ${e && e.category===c?'selected':''}>${escH(c)}</option>`).join('');
+  document.getElementById('mExpDate').value      = e ? e.date        : new Date().toISOString().split('T')[0];
+  if (e) sel.value = e.category;
+  document.getElementById('mExpVendor').value    = e ? e.vendor      : '';
+  document.getElementById('mExpQuoted').value    = e ? e.quotedAmount: '';
+  document.getElementById('mExpActual').value    = e ? e.actualAmount: '';
+  document.getElementById('mExpQuoteLink').value = e ? e.quoteLink   : '';
+  document.getElementById('mExpPaid').value      = e ? e.paid        : '未匯款';
+  document.getElementById('mExpPaidDate').value  = e ? e.paidDate    : '';
+  document.getElementById('mExpNote').value      = e ? e.note        : '';
+  document.getElementById('modalExpense').classList.add('open');
+}
+
+function confirmExpense() {
+  const date = document.getElementById('mExpDate').value;
+  if (!date) { alert('請填寫日期'); return; }
+  D.expenses = D.expenses || [];
+  const obj = {
+    id:           pendingExpenseId || Date.now(),
+    date,
+    category:     document.getElementById('mExpCategory').value,
+    vendor:       document.getElementById('mExpVendor').value.trim(),
+    quotedAmount: Number(document.getElementById('mExpQuoted').value) || 0,
+    actualAmount: Number(document.getElementById('mExpActual').value) || 0,
+    quoteLink:    document.getElementById('mExpQuoteLink').value.trim(),
+    paid:         document.getElementById('mExpPaid').value,
+    paidDate:     document.getElementById('mExpPaidDate').value,
+    note:         document.getElementById('mExpNote').value.trim()
+  };
+  if (pendingExpenseId) {
+    const idx = D.expenses.findIndex(x => x.id === pendingExpenseId);
+    if (idx > -1) D.expenses[idx] = obj;
+  } else {
+    D.expenses.push(obj);
+  }
+  scheduleSave();
+  renderExpenses();
+  closeModal('modalExpense');
+}
+
+function deleteExpense(id) {
+  if (!confirm('確定刪除此費用明細？')) return;
+  D.expenses = (D.expenses||[]).filter(x => x.id !== id);
+  scheduleSave();
+  renderExpenses();
+}
+
+// ════════════════════════════════════════════════
+// MEETING RECORDS
+// ════════════════════════════════════════════════
+let pendingMeetingId = null;
+
+function renderMeetings() {
+  const tbody = document.getElementById('meetingBody');
+  if (!tbody) return;
+  const meetings = D.meetings || [];
+  const cnt = document.getElementById('meetCount');
+  if (cnt) cnt.textContent = meetings.length;
+  const rows = meetings.slice().sort((a,b) => b.date.localeCompare(a.date));
+  tbody.innerHTML = rows.length ? rows.map(m => `
+    <tr>
+      <td style="white-space:nowrap">${escH(m.date)}</td>
+      <td style="font-weight:600">${escH(m.title)}</td>
+      <td style="max-width:130px">${escH(m.attendees)}</td>
+      <td style="max-width:220px;white-space:pre-wrap;line-height:1.6">${escH(m.decisions)}</td>
+      <td style="max-width:220px;white-space:pre-wrap;line-height:1.6">${escH(m.actions)}</td>
+      <td style="white-space:nowrap">
+        <button class="act-btn" onclick="openMeetingModal(${m.id})">✏️</button>
+        <button class="act-btn del" onclick="deleteMeeting(${m.id})">🗑</button>
+      </td>
+    </tr>`).join('')
+    : '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:24px">尚無會議記錄</td></tr>';
+}
+
+function openMeetingModal(id) {
+  pendingMeetingId = id || null;
+  const m = id ? (D.meetings||[]).find(x => x.id === id) : null;
+  document.getElementById('mMeetDate').value      = m ? m.date      : new Date().toISOString().split('T')[0];
+  document.getElementById('mMeetTitle').value     = m ? m.title     : '';
+  document.getElementById('mMeetAttendees').value = m ? m.attendees : '';
+  document.getElementById('mMeetDecisions').value = m ? m.decisions : '';
+  document.getElementById('mMeetActions').value   = m ? m.actions   : '';
+  document.getElementById('modalMeeting').classList.add('open');
+  document.getElementById('mMeetTitle').focus();
+}
+
+function confirmMeeting() {
+  const date  = document.getElementById('mMeetDate').value;
+  const title = document.getElementById('mMeetTitle').value.trim();
+  if (!date || !title) { alert('請填寫日期與會議主題'); return; }
+  D.meetings = D.meetings || [];
+  const obj = {
+    id:        pendingMeetingId || Date.now(),
+    date,
+    title,
+    attendees: document.getElementById('mMeetAttendees').value.trim(),
+    decisions: document.getElementById('mMeetDecisions').value.trim(),
+    actions:   document.getElementById('mMeetActions').value.trim()
+  };
+  if (pendingMeetingId) {
+    const idx = D.meetings.findIndex(x => x.id === pendingMeetingId);
+    if (idx > -1) D.meetings[idx] = obj;
+  } else {
+    D.meetings.push(obj);
+  }
+  scheduleSave();
+  renderMeetings();
+  closeModal('modalMeeting');
+}
+
+function deleteMeeting(id) {
+  if (!confirm('確定刪除此會議記錄？')) return;
+  D.meetings = (D.meetings||[]).filter(x => x.id !== id);
+  scheduleSave();
+  renderMeetings();
+}
+
+// ════════════════════════════════════════════════
+// DOCUMENT RECORDS
+// ════════════════════════════════════════════════
+let pendingDocId = null;
+const DOC_DIR_LABEL  = { in: '📥 收文', out: '📤 發文' };
+const DOC_STATUS_COLOR = { '處理中':'#fb8c00', '待回覆':'#e53935', '已結案':'#43a047' };
+
+function renderDocs() {
+  const tbody = document.getElementById('docBody');
+  if (!tbody) return;
+  const docs = D.docs || [];
+  const cnt = document.getElementById('docCount');
+  if (cnt) cnt.textContent = docs.length;
+  const rows = docs.slice().sort((a,b) => b.date.localeCompare(a.date));
+  tbody.innerHTML = rows.length ? rows.map(d => `
+    <tr>
+      <td style="white-space:nowrap">${escH(d.date)}</td>
+      <td style="max-width:160px;font-size:13px">${escH(d.docNo)}</td>
+      <td style="white-space:nowrap">${DOC_DIR_LABEL[d.dir]||d.dir}</td>
+      <td style="max-width:260px;white-space:pre-wrap;line-height:1.6">${escH(d.subject)}</td>
+      <td style="white-space:nowrap;font-weight:600;color:${DOC_STATUS_COLOR[d.status]||'#666'}">${escH(d.status)}</td>
+      <td style="max-width:140px">${escH(d.note)}</td>
+      <td style="white-space:nowrap">
+        <button class="act-btn" onclick="openDocModal(${d.id})">✏️</button>
+        <button class="act-btn del" onclick="deleteDoc(${d.id})">🗑</button>
+      </td>
+    </tr>`).join('')
+    : '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px">尚無公文記錄</td></tr>';
+}
+
+function openDocModal(id) {
+  pendingDocId = id || null;
+  const d = id ? (D.docs||[]).find(x => x.id === id) : null;
+  document.getElementById('mDocDate').value    = d ? d.date    : new Date().toISOString().split('T')[0];
+  document.getElementById('mDocNo').value      = d ? d.docNo   : '';
+  document.getElementById('mDocDir').value     = d ? d.dir     : 'in';
+  document.getElementById('mDocSubject').value = d ? d.subject : '';
+  document.getElementById('mDocStatus').value  = d ? d.status  : '處理中';
+  document.getElementById('mDocNote').value    = d ? d.note    : '';
+  document.getElementById('modalDoc').classList.add('open');
+}
+
+function confirmDoc() {
+  const date    = document.getElementById('mDocDate').value;
+  const subject = document.getElementById('mDocSubject').value.trim();
+  if (!date || !subject) { alert('請填寫日期與主旨'); return; }
+  D.docs = D.docs || [];
+  const obj = {
+    id:      pendingDocId || Date.now(),
+    date,
+    docNo:   document.getElementById('mDocNo').value.trim(),
+    dir:     document.getElementById('mDocDir').value,
+    subject,
+    status:  document.getElementById('mDocStatus').value,
+    note:    document.getElementById('mDocNote').value.trim()
+  };
+  if (pendingDocId) {
+    const idx = D.docs.findIndex(x => x.id === pendingDocId);
+    if (idx > -1) D.docs[idx] = obj;
+  } else {
+    D.docs.push(obj);
+  }
+  scheduleSave();
+  renderDocs();
+  closeModal('modalDoc');
+}
+
+function deleteDoc(id) {
+  if (!confirm('確定刪除此公文記錄？')) return;
+  D.docs = (D.docs||[]).filter(x => x.id !== id);
+  scheduleSave();
+  renderDocs();
 }
 
 // ════════════════════════════════════════════════
