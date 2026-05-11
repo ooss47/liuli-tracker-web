@@ -338,6 +338,12 @@ input.date-input {
         <div class="header-sub">115 年長者量六力 LINE OA 行銷宣導計畫</div>
       </div>
       <div class="header-user">
+        <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.15);border-radius:20px;padding:4px 12px;">
+          <span style="font-size:12px">🔍 字級</span>
+          <input id="fontSlider" type="range" min="0.8" max="1.6" step="0.05" value="1"
+            style="width:90px;cursor:pointer;accent-color:white" oninput="setZoom(this.value)">
+          <span id="fontSizeLabel" style="font-size:12px;min-width:36px;text-align:center">100%</span>
+        </div>
         <div class="user-badge">👤 <span id="currentUserName">-</span></div>
         <button class="logout-btn" onclick="doLogout()">登出</button>
       </div>
@@ -495,6 +501,27 @@ input.date-input {
 </div>
 
 <script>
+// ════════════════════════════════════════════════
+// 🔍 字級縮放（拉滑桿即可放大整個版面）
+// ════════════════════════════════════════════════
+function setZoom(val) {
+  const v = parseFloat(val) || 1;
+  document.body.style.zoom = v;
+  localStorage.setItem('hl_zoom', v);
+  const label = document.getElementById('fontSizeLabel');
+  if (label) label.textContent = Math.round(v * 100) + '%';
+  const slider = document.getElementById('fontSlider');
+  if (slider && parseFloat(slider.value) !== v) slider.value = v;
+}
+// 載入時套用上次設定
+(function () {
+  const z = parseFloat(localStorage.getItem('hl_zoom'));
+  if (z && z >= 0.8 && z <= 1.6) {
+    document.body.style.zoom = z;
+    document.addEventListener('DOMContentLoaded', () => setZoom(z));
+  }
+})();
+
 // ════════════════════════════════════════════════
 // 🔒 公司密碼閘 — 阻擋未授權訪客看到登入畫面
 // ════════════════════════════════════════════════
