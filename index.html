@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4f8; color: #333; min-height: 100vh; }
+body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4f8; color: #333; min-height: 100vh; font-size: 17px; }
 
 /* ── Login ── */
 #loginScreen {
@@ -19,31 +19,31 @@ body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4f8; color: #333
   box-shadow: 0 20px 60px rgba(0,0,0,0.25);
 }
 .login-logo  { text-align: center; font-size: 36px; margin-bottom: 8px; }
-.login-title { text-align: center; font-size: 18px; font-weight: 700; color: #1a73e8; margin-bottom: 4px; }
-.login-sub   { text-align: center; font-size: 13px; color: #888; margin-bottom: 28px; }
+.login-title { text-align: center; font-size: 20px; font-weight: 700; color: #1a73e8; margin-bottom: 4px; }
+.login-sub   { text-align: center; font-size: 15px; color: #888; margin-bottom: 28px; }
 .login-form  { display: flex; flex-direction: column; gap: 14px; }
-.login-form label { font-size: 13px; color: #555; display: block; margin-bottom: 4px; }
+.login-form label { font-size: 15px; color: #555; display: block; margin-bottom: 4px; }
 .login-form input {
   width: 100%; padding: 10px 14px; border: 1.5px solid #ddd; border-radius: 8px;
-  font-size: 14px; font-family: 'Noto Sans TC', sans-serif; transition: border-color 0.2s;
+  font-size: 16px; font-family: 'Noto Sans TC', sans-serif; transition: border-color 0.2s;
 }
 .login-form input:focus { outline: none; border-color: #1a73e8; }
 .login-btn {
   background: #1a73e8; color: white; border: none; border-radius: 8px; padding: 12px;
-  font-size: 15px; font-weight: 600; font-family: 'Noto Sans TC', sans-serif;
+  font-size: 17px; font-weight: 600; font-family: 'Noto Sans TC', sans-serif;
   cursor: pointer; transition: background 0.2s; margin-top: 4px;
 }
 .login-btn:hover { background: #1557b0; }
 .login-btn:disabled { background: #93b9f5; cursor: not-allowed; }
 .login-error {
   background: #ffebee; color: #c62828; border-radius: 6px; padding: 8px 12px;
-  font-size: 13px; text-align: center; display: none;
+  font-size: 15px; text-align: center; display: none;
 }
 .api-warn {
   background: #fff8e1; color: #f57f17; border-radius: 6px; padding: 10px 12px;
-  font-size: 12px; margin-top: 12px; display: none; line-height: 1.6;
+  font-size: 14px; margin-top: 12px; display: none; line-height: 1.6;
 }
-.login-hint { text-align: center; font-size: 12px; color: #aaa; margin-top: 14px; }
+.login-hint { text-align: center; font-size: 14px; color: #aaa; margin-top: 14px; }
 
 /* ── Main App ── */
 #app { display: none; }
@@ -51,17 +51,17 @@ body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4f8; color: #333
 /* Header */
 .header { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: white; padding: 16px 24px; }
 .header-row1 { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-.header-title { font-size: 18px; font-weight: 700; }
-.header-sub   { font-size: 12px; opacity: 0.8; }
+.header-title { font-size: 20px; font-weight: 700; }
+.header-sub   { font-size: 14px; opacity: 0.8; }
 .header-user  { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-.user-badge   { background: rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 12px; font-size: 13px; }
+.user-badge   { background: rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 12px; font-size: 15px; }
 .logout-btn   {
   background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4);
-  color: white; border-radius: 8px; padding: 5px 12px; font-size: 12px;
+  color: white; border-radius: 8px; padding: 5px 12px; font-size: 14px;
   cursor: pointer; font-family: 'Noto Sans TC', sans-serif;
 }
 .logout-btn:hover { background: rgba(255,255,255,0.28); }
-.header-meta      { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; }
+.header-meta      { display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; }
 .header-meta .lbl { opacity: 0.7; }
 
 /* Progress */
@@ -69,10 +69,10 @@ body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4f8; color: #333
   background: white; padding: 10px 24px; border-bottom: 1px solid #e0e0e0;
   display: flex; align-items: center; gap: 14px;
 }
-.progress-info  { font-size: 13px; color: #555; white-space: nowrap; }
+.progress-info  { font-size: 15px; color: #555; white-space: nowrap; }
 .progress-track { flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
 .progress-fill  { height: 100%; background: linear-gradient(90deg,#43a047,#66bb6a); border-radius: 4px; transition: width .5s; }
-.sync-status    { white-space: nowrap; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888; }
+.sync-status    { white-space: nowrap; display: flex; align-items: center; gap: 6px; font-size: 14px; color: #888; }
 .sync-dot       { width: 7px; height: 7px; border-radius: 50%; background: #43a047; }
 .sync-dot.saving { background: #fb8c00; animation: blink .8s infinite; }
 .sync-dot.error  { background: #e53935; }
@@ -82,7 +82,7 @@ body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4f8; color: #333
 .tabs    { background: white; border-bottom: 1px solid #e0e0e0; padding: 0 24px; }
 .tab-nav { display: flex; }
 .tab-btn {
-  padding: 13px 18px; font-size: 14px; font-weight: 500; color: #666;
+  padding: 13px 18px; font-size: 16px; font-weight: 500; color: #666;
   background: none; border: none; border-bottom: 3px solid transparent;
   cursor: pointer; font-family: 'Noto Sans TC', sans-serif; transition: all .2s;
 }
@@ -98,12 +98,12 @@ body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4f8; color: #333
 .filter-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
 .filter-btn {
   padding: 5px 14px; border-radius: 16px; border: 1.5px solid #ddd;
-  background: white; cursor: pointer; font-size: 13px;
+  background: white; cursor: pointer; font-size: 15px;
   font-family: 'Noto Sans TC', sans-serif; transition: all .2s;
 }
 .filter-btn:hover  { border-color: #1a73e8; color: #1a73e8; }
 .filter-btn.active { background: #1a73e8; color: white; border-color: #1a73e8; }
-.filter-count { font-size: 11px; margin-left: 3px; opacity: .85; }
+.filter-count { font-size: 13px; margin-left: 3px; opacity: .85; }
 
 /* Phase */
 .phase-section {
@@ -115,14 +115,14 @@ body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4f8; color: #333
   cursor: pointer; user-select: none; border-bottom: 1px solid #f0f0f0;
 }
 .phase-header:hover { background: #f8f9fa; }
-.ph-toggle { color: #999; font-size: 11px; transition: transform .2s; }
+.ph-toggle { color: #999; font-size: 13px; transition: transform .2s; }
 .ph-toggle.collapsed { transform: rotate(-90deg); }
-.ph-title  { font-weight: 700; font-size: 14px; color: #1a73e8; }
+.ph-title  { font-weight: 700; font-size: 16px; color: #1a73e8; }
 .ph-stats  { display: flex; gap: 6px; margin-left: auto; }
 .add-task-btn {
   margin-left: 6px; padding: 3px 10px; border-radius: 12px;
   background: #e8f0fe; color: #1a73e8; border: none; cursor: pointer;
-  font-size: 12px; font-family: 'Noto Sans TC', sans-serif;
+  font-size: 14px; font-family: 'Noto Sans TC', sans-serif;
 }
 .add-task-btn:hover { background: #d2e3fc; }
 
@@ -145,15 +145,15 @@ body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4f8; color: #333
 .status-circle.done         { background: #43a047; border-color: #2e7d32; }
 .status-circle.delayed      { background: #e53935; border-color: #b71c1c; }
 
-.task-name { font-weight: 600; font-size: 14px; color: #222; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.status-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.task-name { font-weight: 600; font-size: 16px; color: #222; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.status-badge { font-size: 13px; padding: 2px 8px; border-radius: 10px; font-weight: 500; cursor: pointer; white-space: nowrap; }
 .status-badge.not_started { background: #f0f0f0; color: #757575; }
 .status-badge.in_progress { background: #fff3e0; color: #e65100; }
 .status-badge.done        { background: #e8f5e9; color: #2e7d32; }
 .status-badge.delayed     { background: #ffebee; color: #c62828; }
 
 .task-meta { display: flex; gap: 12px; margin-top: 5px; flex-wrap: wrap; align-items: center; }
-.meta-item { font-size: 12px; color: #666; display: flex; align-items: center; gap: 4px; }
+.meta-item { font-size: 14px; color: #666; display: flex; align-items: center; gap: 4px; }
 
 .editable {
   cursor: pointer; border-radius: 4px; padding: 1px 4px; transition: background .15s;
@@ -165,31 +165,31 @@ body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4f8; color: #333
 
 select.sel {
   border: 1px solid #ddd; border-radius: 4px; padding: 1px 6px;
-  font-size: 12px; font-family: 'Noto Sans TC', sans-serif; background: white; cursor: pointer;
+  font-size: 14px; font-family: 'Noto Sans TC', sans-serif; background: white; cursor: pointer;
 }
 select.sel:focus { outline: 2px solid #1a73e8; }
 input.date-input {
   border: 1px solid #ddd; border-radius: 4px; padding: 1px 6px;
-  font-size: 12px; font-family: 'Noto Sans TC', sans-serif; background: white;
+  font-size: 14px; font-family: 'Noto Sans TC', sans-serif; background: white;
 }
 
-.task-note { font-size: 12px; color: #888; font-style: italic; cursor: pointer; padding: 2px 4px; border-radius: 4px; display: inline-block; min-width: 60px; margin-top: 3px; }
+.task-note { font-size: 14px; color: #888; font-style: italic; cursor: pointer; padding: 2px 4px; border-radius: 4px; display: inline-block; min-width: 60px; margin-top: 3px; }
 .task-note:hover { background: #f0f4ff; }
 .task-note[contenteditable="true"] { background: white; outline: 2px solid #1a73e8; cursor: text; color: #333; font-style: normal; }
 
 .task-links  { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
-.t-link      { font-size: 11px; color: #1a73e8; text-decoration: none; padding: 2px 8px; background: #e8f0fe; border-radius: 8px; display: flex; align-items: center; gap: 4px; }
+.t-link      { font-size: 13px; color: #1a73e8; text-decoration: none; padding: 2px 8px; background: #e8f0fe; border-radius: 8px; display: flex; align-items: center; gap: 4px; }
 .t-link:hover { background: #d2e3fc; }
-.t-link-del  { color: #aaa; cursor: pointer; font-size: 10px; font-weight: bold; }
+.t-link-del  { color: #aaa; cursor: pointer; font-size: 12px; font-weight: bold; }
 .t-link-del:hover { color: #e53935; }
 
 .task-logs { margin-top: 5px; }
-.log-entry { font-size: 12px; color: #666; padding: 3px 0 3px 8px; border-left: 2px solid #e0e0e0; margin-bottom: 3px; display: flex; gap: 8px; }
+.log-entry { font-size: 14px; color: #666; padding: 3px 0 3px 8px; border-left: 2px solid #e0e0e0; margin-bottom: 3px; display: flex; gap: 8px; }
 .log-date  { color: #aaa; white-space: nowrap; }
 
 .task-actions { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
 .act-btn {
-  font-size: 11px; padding: 3px 10px; border-radius: 10px; border: 1px solid #e0e0e0;
+  font-size: 13px; padding: 3px 10px; border-radius: 10px; border: 1px solid #e0e0e0;
   background: white; cursor: pointer; color: #555;
   font-family: 'Noto Sans TC', sans-serif; transition: all .15s;
 }
@@ -199,13 +199,13 @@ input.date-input {
 /* Gantt */
 .gantt-wrap  { overflow-x: auto; }
 .gantt-table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.07); min-width: 800px; }
-.gantt-table th { background: #1a73e8; color: white; padding: 10px 6px; font-size: 12px; font-weight: 600; text-align: center; }
+.gantt-table th { background: #1a73e8; color: white; padding: 10px 6px; font-size: 14px; font-weight: 600; text-align: center; }
 .gantt-table th.g-phase { width: 50px; }
 .gantt-table th.g-task  { text-align: left; padding-left: 14px; width: 210px; }
 .gantt-table th.g-who   { width: 72px; }
-.gantt-table td { padding: 6px; border-bottom: 1px solid #f0f0f0; font-size: 12px; text-align: center; }
+.gantt-table td { padding: 6px; border-bottom: 1px solid #f0f0f0; font-size: 14px; text-align: center; }
 .gantt-table td.g-task  { text-align: left; padding-left: 14px; font-weight: 500; }
-.gantt-table td.g-phase { color: #888; font-size: 11px; }
+.gantt-table td.g-phase { color: #888; font-size: 13px; }
 .gantt-table tr:last-child td { border-bottom: none; }
 .gantt-table tr:hover td      { background: #fafbff; }
 .g-cell { height: 24px; border-radius: 3px; cursor: pointer; transition: opacity .2s; margin: 2px; }
@@ -216,15 +216,15 @@ input.date-input {
 .g-cell.filled.delayed     { background: #e53935; }
 .g-cell.empty              { background: #f5f5f5; }
 .g-cell.selecting          { background: #90caf9 !important; }
-.gantt-hint   { font-size: 12px; color: #999; margin-top: 10px; }
+.gantt-hint   { font-size: 14px; color: #999; margin-top: 10px; }
 .gantt-legend { display: flex; gap: 14px; margin-top: 8px; flex-wrap: wrap; }
-.leg-item     { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #666; }
+.leg-item     { display: flex; align-items: center; gap: 5px; font-size: 14px; color: #666; }
 .leg-sw       { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
 
 /* Push */
 .push-table  { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
-.push-table th { background: #1a73e8; color: white; padding: 10px 14px; font-size: 13px; font-weight: 600; text-align: left; }
-.push-table td { padding: 9px 14px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: middle; }
+.push-table th { background: #1a73e8; color: white; padding: 10px 14px; font-size: 15px; font-weight: 600; text-align: left; }
+.push-table td { padding: 9px 14px; border-bottom: 1px solid #f0f0f0; font-size: 15px; vertical-align: middle; }
 .push-table tr:last-child td { border-bottom: none; }
 .push-table tr:hover td      { background: #fafbff; }
 .push-month  { font-weight: 700; color: #1a73e8; }
@@ -233,16 +233,16 @@ input.date-input {
 .mgmt-row    { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
 .mgmt-row:last-child { border-bottom: none; }
 .mgmt-name   { font-weight: 500; min-width: 80px; }
-.mgmt-input  { flex: 1; border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; font-size: 13px; font-family: 'Noto Sans TC', sans-serif; }
+.mgmt-input  { flex: 1; border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; font-size: 15px; font-family: 'Noto Sans TC', sans-serif; }
 .mgmt-input:focus { outline: 2px solid #1a73e8; }
 
 /* Footer */
 .footer       { background: white; border-top: 1px solid #e0e0e0; padding: 14px 24px; margin-top: 16px; }
 .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-.footer-hint  { font-size: 12px; color: #888; }
-.penalty      { font-size: 12px; color: #e53935; background: #ffebee; padding: 5px 10px; border-radius: 6px; margin-top: 4px; display: inline-block; }
+.footer-hint  { font-size: 14px; color: #888; }
+.penalty      { font-size: 14px; color: #e53935; background: #ffebee; padding: 5px 10px; border-radius: 6px; margin-top: 4px; display: inline-block; }
 .footer-btns  { display: flex; gap: 8px; flex-wrap: wrap; }
-.btn          { padding: 7px 14px; border-radius: 7px; border: none; cursor: pointer; font-size: 13px; font-family: 'Noto Sans TC', sans-serif; transition: all .2s; }
+.btn          { padding: 7px 14px; border-radius: 7px; border: none; cursor: pointer; font-size: 15px; font-family: 'Noto Sans TC', sans-serif; transition: all .2s; }
 .btn-primary  { background: #1a73e8; color: white; }
 .btn-primary:hover  { background: #1557b0; }
 .btn-secondary { background: white; color: #555; border: 1px solid #ddd; }
@@ -254,12 +254,12 @@ input.date-input {
 .modal-bg  { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 999; align-items: center; justify-content: center; }
 .modal-bg.open { display: flex; }
 .modal-box { background: white; border-radius: 12px; padding: 24px; width: 90%; max-width: 420px; box-shadow: 0 10px 40px rgba(0,0,0,.2); }
-.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
 .form-group  { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
-.form-group label { font-size: 13px; color: #555; }
+.form-group label { font-size: 15px; color: #555; }
 .form-group input, .form-group select, .form-group textarea {
   border: 1.5px solid #ddd; border-radius: 7px; padding: 8px 10px;
-  font-size: 14px; font-family: 'Noto Sans TC', sans-serif;
+  font-size: 16px; font-family: 'Noto Sans TC', sans-serif;
 }
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
   outline: none; border-color: #1a73e8;
@@ -269,7 +269,7 @@ input.date-input {
 
 /* Offline banner */
 .offline-bar {
-  background: #ffc107; color: #333; text-align: center; padding: 6px; font-size: 13px; display: none;
+  background: #ffc107; color: #333; text-align: center; padding: 6px; font-size: 15px; display: none;
 }
 .offline-bar.show { display: block; }
 
@@ -285,17 +285,17 @@ input.date-input {
 <div id="gateScreen" style="display:none; min-height:100vh; align-items:center; justify-content:center; background:linear-gradient(135deg,#1a73e8 0%,#0d47a1 100%); position:fixed; inset:0; z-index:10000;">
   <div style="background:white; border-radius:16px; padding:40px 36px; width:360px; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
     <div style="text-align:center; font-size:36px; margin-bottom:8px;">🔒</div>
-    <div style="text-align:center; font-size:18px; font-weight:700; color:#1a73e8; margin-bottom:4px;">需要存取授權</div>
-    <div style="text-align:center; font-size:13px; color:#888; margin-bottom:28px;">此網站僅限健康盟內部使用</div>
+    <div style="text-align:center; font-size:20px; font-weight:700; color:#1a73e8; margin-bottom:4px;">需要存取授權</div>
+    <div style="text-align:center; font-size:15px; color:#888; margin-bottom:28px;">此網站僅限健康盟內部使用</div>
     <form onsubmit="checkGate(event)" style="display:flex; flex-direction:column; gap:14px;">
       <div>
-        <label style="font-size:13px; color:#555; display:block; margin-bottom:4px;">公司存取密碼</label>
+        <label style="font-size:15px; color:#555; display:block; margin-bottom:4px;">公司存取密碼</label>
         <input id="gateInput" type="password" placeholder="請洽 Tina 取得密碼" autofocus
-          style="width:100%; padding:10px 14px; border:1.5px solid #ddd; border-radius:8px; font-size:14px; font-family:'Noto Sans TC',sans-serif;">
+          style="width:100%; padding:10px 14px; border:1.5px solid #ddd; border-radius:8px; font-size:16px; font-family:'Noto Sans TC',sans-serif;">
       </div>
-      <div id="gateError" style="background:#ffebee; color:#c62828; border-radius:6px; padding:8px 12px; font-size:13px; text-align:center; display:none;">密碼錯誤</div>
+      <div id="gateError" style="background:#ffebee; color:#c62828; border-radius:6px; padding:8px 12px; font-size:15px; text-align:center; display:none;">密碼錯誤</div>
       <button type="submit"
-        style="background:#1a73e8; color:white; border:none; border-radius:8px; padding:12px; font-size:15px; font-weight:600; font-family:'Noto Sans TC',sans-serif; cursor:pointer; margin-top:4px;">
+        style="background:#1a73e8; color:white; border:none; border-radius:8px; padding:12px; font-size:17px; font-weight:600; font-family:'Noto Sans TC',sans-serif; cursor:pointer; margin-top:4px;">
         進入
       </button>
     </form>
@@ -411,7 +411,7 @@ input.date-input {
         <thead>
           <tr>
             <th>月份</th><th>件數</th><th>主題方向</th>
-            <th>送審截止</th><th>後台完成</th><th>負責人</th><th>狀態</th><th>備註</th>
+            <th>送審截止</th><th>後台完成</th><th>負責人</th><th>狀態</th><th>備註</th><th>📎 內容</th>
           </tr>
         </thead>
         <tbody id="pushBody"></tbody>
@@ -447,6 +447,29 @@ input.date-input {
   </div>
 </div>
 
+<div class="modal-bg" id="modalPushContent">
+  <div class="modal-box" style="max-width:600px">
+    <div class="modal-title" id="mpcTitle">📎 推播內容</div>
+    <div class="form-group">
+      <label>☁️ 雲端資料夾連結 (Google Drive / Dropbox 等)</label>
+      <input id="mpcDrive" type="url" placeholder="https://drive.google.com/...">
+    </div>
+    <div class="form-group">
+      <label>🖼️ 圖片網址（單張或封面）</label>
+      <input id="mpcImg" type="url" placeholder="https://..." onchange="updatePushImgPreview()">
+      <img id="mpcImgPreview" style="display:none;max-width:100%;max-height:200px;margin-top:8px;border-radius:8px;border:1px solid #eee">
+    </div>
+    <div class="form-group">
+      <label>✍️ 發文內容</label>
+      <textarea id="mpcContent" placeholder="貼上 LINE OA 發文文案..." style="min-height:140px"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalPushContent')">取消</button>
+      <button class="btn btn-primary" onclick="savePushContent()">儲存</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="modalLog">
   <div class="modal-box">
     <div class="modal-title">📝 新增進度紀錄</div>
@@ -462,7 +485,7 @@ input.date-input {
 <div class="modal-bg" id="modalPwd">
   <div class="modal-box" style="max-width:460px">
     <div class="modal-title">🔑 帳號密碼管理</div>
-    <div style="font-size:13px;color:#888;margin-bottom:12px">管理員可變更所有人密碼，一般成員只能改自己的。密碼至少 4 個字元。</div>
+    <div style="font-size:15px;color:#888;margin-bottom:12px">管理員可變更所有人密碼，一般成員只能改自己的。密碼至少 4 個字元。</div>
     <div id="pwdList"></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modalPwd')">取消</button>
@@ -735,8 +758,8 @@ async function openPwdModal() {
       <input class="mgmt-input" type="password" data-name="${escH(u.name)}"
         placeholder="輸入新密碼（留空則不變）"
         ${canEdit ? '' : 'disabled style="background:#f5f5f5;color:#bbb"'}>
-      ${u.role === 'admin' ? '<span style="font-size:11px;color:#1a73e8">管理員</span>' : ''}
-      ${canDel ? `<button class="btn btn-danger" style="padding:4px 10px;font-size:12px" onclick="deleteUser('${escH(u.name)}')">🗑</button>` : ''}
+      ${u.role === 'admin' ? '<span style="font-size:13px;color:#1a73e8">管理員</span>' : ''}
+      ${canDel ? `<button class="btn btn-danger" style="padding:4px 10px;font-size:14px" onclick="deleteUser('${escH(u.name)}')">🗑</button>` : ''}
     `;
     list.appendChild(row);
   });
@@ -746,7 +769,7 @@ async function openPwdModal() {
     const addBox = document.createElement('div');
     addBox.style.cssText = 'margin-top:18px;padding-top:14px;border-top:2px dashed #ddd';
     addBox.innerHTML = `
-      <div style="font-weight:600;font-size:13px;margin-bottom:8px;color:#1a73e8">＋ 新增使用者</div>
+      <div style="font-weight:600;font-size:15px;margin-bottom:8px;color:#1a73e8">＋ 新增使用者</div>
       <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center">
         <input id="newUserName" placeholder="姓名" class="mgmt-input">
         <input id="newUserPwd"  type="password" placeholder="初始密碼（4 字以上）" class="mgmt-input">
@@ -754,7 +777,7 @@ async function openPwdModal() {
           <option value="member">一般成員</option>
           <option value="admin">管理員</option>
         </select>
-        <button class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="addUser()">新增</button>
+        <button class="btn btn-primary" style="padding:6px 12px;font-size:14px" onclick="addUser()">新增</button>
       </div>
     `;
     list.appendChild(addBox);
@@ -931,7 +954,7 @@ function renderGantt() {
     tr.innerHTML = `
       <td class="g-phase">${task.phase.replace('第','').replace('期','')}</td>
       <td class="g-task">${escH(task.task)}</td>
-      <td style="text-align:center;font-size:12px">${escH(task.assignee)}</td>
+      <td style="text-align:center;font-size:14px">${escH(task.assignee)}</td>
       ${cells}
     `;
     tbody.appendChild(tr);
@@ -968,9 +991,21 @@ function renderPush() {
         contenteditable="false" onclick="startEdit(this)" onblur="endPushEdit(this)" onkeydown="editKey(event,this)"
         data-ph="—"
       >${escH(row.note)||''}</span></td>
+      <td>${renderPushContentCell(row, i)}</td>
     `;
     tbody.appendChild(tr);
   });
+}
+
+function renderPushContentCell(row, i) {
+  const hasLink = row.driveLink && row.driveLink.trim();
+  const hasImg  = row.imageUrl  && row.imageUrl.trim();
+  const hasTxt  = row.content   && row.content.trim();
+  const cnt = [hasLink, hasImg, hasTxt].filter(Boolean).length;
+  const badge = cnt > 0
+    ? `<span style="background:#43a047;color:white;border-radius:10px;padding:1px 7px;font-size:12px;margin-left:4px">${cnt}</span>`
+    : '';
+  return `<button class="act-btn" style="font-size:14px" onclick="openPushContent(${i})">📎 編輯${badge}</button>`;
 }
 
 // ════════════════════════════════════════════════
@@ -1147,6 +1182,34 @@ function confirmLog() {
   }
   closeModal('modalLog');
 }
+let pendingPushIdx = null;
+function openPushContent(idx) {
+  pendingPushIdx = idx;
+  const row = D.pushSchedule[idx];
+  document.getElementById('mpcTitle').textContent = `📎 ${row.month} 推播內容`;
+  document.getElementById('mpcDrive').value   = row.driveLink || '';
+  document.getElementById('mpcImg').value     = row.imageUrl  || '';
+  document.getElementById('mpcContent').value = row.content   || '';
+  updatePushImgPreview();
+  document.getElementById('modalPushContent').classList.add('open');
+}
+function updatePushImgPreview() {
+  const url = document.getElementById('mpcImg').value.trim();
+  const img = document.getElementById('mpcImgPreview');
+  if (url) { img.src = url; img.style.display = 'block'; img.onerror = () => { img.style.display = 'none'; }; }
+  else     { img.style.display = 'none'; }
+}
+function savePushContent() {
+  if (pendingPushIdx == null) return;
+  const row = D.pushSchedule[pendingPushIdx];
+  row.driveLink = document.getElementById('mpcDrive').value.trim();
+  row.imageUrl  = document.getElementById('mpcImg').value.trim();
+  row.content   = document.getElementById('mpcContent').value.trim();
+  scheduleSave();
+  renderPush();
+  closeModal('modalPushContent');
+}
+
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-bg').forEach(bg => {
   bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
