@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>量六力 LINE OA 專案追蹤表</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4f8; color: #333; min-height: 100vh; }
+
+/* ── Login ── */
+#loginScreen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+}
+.login-card {
+  background: white; border-radius: 16px; padding: 40px 36px; width: 360px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+.login-logo  { text-align: center; font-size: 36px; margin-bottom: 8px; }
+.login-title { text-align: center; font-size: 18px; font-weight: 700; color: #1a73e8; margin-bottom: 4px; }
+.login-sub   { text-align: center; font-size: 13px; color: #888; margin-bottom: 28px; }
+.login-form  { display: flex; flex-direction: column; gap: 14px; }
+.login-form label { font-size: 13px; color: #555; display: block; margin-bottom: 4px; }
+.login-form input {
+  width: 100%; padding: 10px 14px; border: 1.5px solid #ddd; border-radius: 8px;
+  font-size: 14px; font-family: 'Noto Sans TC', sans-serif; transition: border-color 0.2s;
+}
+.login-form input:focus { outline: none; border-color: #1a73e8; }
+.login-btn {
+  background: #1a73e8; color: white; border: none; border-radius: 8px; padding: 12px;
+  font-size: 15px; font-weight: 600; font-family: 'Noto Sans TC', sans-serif;
+  cursor: pointer; transition: background 0.2s; margin-top: 4px;
+}
+.login-btn:hover { background: #1557b0; }
+.login-btn:disabled { background: #93b9f5; cursor: not-allowed; }
+.login-error {
+  background: #ffebee; color: #c62828; border-radius: 6px; padding: 8px 12px;
+  font-size: 13px; text-align: center; display: none;
+}
+.api-warn {
+  background: #fff8e1; color: #f57f17; border-radius: 6px; padding: 10px 12px;
+  font-size: 12px; margin-top: 12px; display: none; line-height: 1.6;
+}
+.login-hint { text-align: center; font-size: 12px; color: #aaa; margin-top: 14px; }
+
+/* ── Main App ── */
+#app { display: none; }
+
+/* Header */
+.header { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: white; padding: 16px 24px; }
+.header-row1 { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.header-title { font-size: 18px; font-weight: 700; }
+.header-sub   { font-size: 12px; opacity: 0.8; }
+.header-user  { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.user-badge   { background: rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 12px; font-size: 13px; }
+.logout-btn   {
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4);
+  color: white; border-radius: 8px; padding: 5px 12px; font-size: 12px;
+  cursor: pointer; font-family: 'Noto Sans TC', sans-serif;
+}
+.logout-btn:hover { background: rgba(255,255,255,0.28); }
+.header-meta      { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; }
+.header-meta .lbl { opacity: 0.7; }
+
+/* Progress */
+.progress-bar-container {
+  background: white; padding: 10px 24px; border-bottom: 1px solid #e0e0e0;
+  display: flex; align-items: center; gap: 14px;
+}
+.progress-info  { font-size: 13px; color: #555; white-space: nowrap; }
+.progress-track { flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
+.progress-fill  { height: 100%; background: linear-gradient(90deg,#43a047,#66bb6a); border-radius: 4px; transition: width .5s; }
+.sync-status    { white-space: nowrap; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888; }
+.sync-dot       { width: 7px; height: 7px; border-radius: 50%; background: #43a047; }
+.sync-dot.saving { background: #fb8c00; animation: blink .8s infinite; }
+.sync-dot.error  { background: #e53935; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+/* Tabs */
+.tabs    { background: white; border-bottom: 1px solid #e0e0e0; padding: 0 24px; }
+.tab-nav { display: flex; }
+.tab-btn {
+  padding: 13px 18px; font-size: 14px; font-weight: 500; color: #666;
+  background: none; border: none; border-bottom: 3px solid transparent;
+  cursor: pointer; font-family: 'Noto Sans TC', sans-serif; transition: all .2s;
+}
+.tab-btn:hover  { color: #1a73e8; }
+.tab-btn.active { color: #1a73e8; border-bottom-color: #1a73e8; }
+
+/* Content */
+.content  { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* Filter */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 5px 14px; border-radius: 16px; border: 1.5px solid #ddd;
+  background: white; cursor: pointer; font-size: 13px;
+  font-family: 'Noto Sans TC', sans-serif; transition: all .2s;
+}
+.filter-btn:hover  { border-color: #1a73e8; color: #1a73e8; }
+.filter-btn.active { background: #1a73e8; color: white; border-color: #1a73e8; }
+.filter-count { font-size: 11px; margin-left: 3px; opacity: .85; }
+
+/* Phase */
+.phase-section {
+  margin-bottom: 14px; background: white; border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.07); overflow: hidden;
+}
+.phase-header {
+  display: flex; align-items: center; gap: 10px; padding: 12px 18px;
+  cursor: pointer; user-select: none; border-bottom: 1px solid #f0f0f0;
+}
+.phase-header:hover { background: #f8f9fa; }
+.ph-toggle { color: #999; font-size: 11px; transition: transform .2s; }
+.ph-toggle.collapsed { transform: rotate(-90deg); }
+.ph-title  { font-weight: 700; font-size: 14px; color: #1a73e8; }
+.ph-stats  { display: flex; gap: 6px; margin-left: auto; }
+.add-task-btn {
+  margin-left: 6px; padding: 3px 10px; border-radius: 12px;
+  background: #e8f0fe; color: #1a73e8; border: none; cursor: pointer;
+  font-size: 12px; font-family: 'Noto Sans TC', sans-serif;
+}
+.add-task-btn:hover { background: #d2e3fc; }
+
+/* Task */
+.task-item {
+  display: grid; grid-template-columns: 36px 1fr; padding: 10px 18px;
+  border-bottom: 1px solid #f5f5f5; transition: background .15s;
+}
+.task-item:last-child { border-bottom: none; }
+.task-item:hover      { background: #fafbff; }
+.task-item.filtered-out { display: none; }
+
+.status-circle {
+  width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
+  flex-shrink: 0; margin-top: 2px; border: 2px solid transparent; transition: transform .15s;
+}
+.status-circle:hover        { transform: scale(1.2); }
+.status-circle.not_started  { background: #e0e0e0; border-color: #bdbdbd; }
+.status-circle.in_progress  { background: #fb8c00; border-color: #ef6c00; }
+.status-circle.done         { background: #43a047; border-color: #2e7d32; }
+.status-circle.delayed      { background: #e53935; border-color: #b71c1c; }
+
+.task-name { font-weight: 600; font-size: 14px; color: #222; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.status-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.status-badge.not_started { background: #f0f0f0; color: #757575; }
+.status-badge.in_progress { background: #fff3e0; color: #e65100; }
+.status-badge.done        { background: #e8f5e9; color: #2e7d32; }
+.status-badge.delayed     { background: #ffebee; color: #c62828; }
+
+.task-meta { display: flex; gap: 12px; margin-top: 5px; flex-wrap: wrap; align-items: center; }
+.meta-item { font-size: 12px; color: #666; display: flex; align-items: center; gap: 4px; }
+
+.editable {
+  cursor: pointer; border-radius: 4px; padding: 1px 4px; transition: background .15s;
+  min-width: 20px; display: inline-block;
+}
+.editable:hover { background: #f0f4ff; }
+.editable[contenteditable="true"] { background: white; outline: 2px solid #1a73e8; cursor: text; }
+.editable:empty:not([contenteditable="true"])::before { content: attr(data-ph); color: #ccc; font-style: italic; font-weight: 400; }
+
+select.sel {
+  border: 1px solid #ddd; border-radius: 4px; padding: 1px 6px;
+  font-size: 12px; font-family: 'Noto Sans TC', sans-serif; background: white; cursor: pointer;
+}
+select.sel:focus { outline: 2px solid #1a73e8; }
+input.date-input {
+  border: 1px solid #ddd; border-radius: 4px; padding: 1px 6px;
+  font-size: 12px; font-family: 'Noto Sans TC', sans-serif; background: white;
+}
+
+.task-note { font-size: 12px; color: #888; font-style: italic; cursor: pointer; padding: 2px 4px; border-radius: 4px; display: inline-block; min-width: 60px; margin-top: 3px; }
+.task-note:hover { background: #f0f4ff; }
+.task-note[contenteditable="true"] { background: white; outline: 2px solid #1a73e8; cursor: text; color: #333; font-style: normal; }
+
+.task-links  { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+.t-link      { font-size: 11px; color: #1a73e8; text-decoration: none; padding: 2px 8px; background: #e8f0fe; border-radius: 8px; display: flex; align-items: center; gap: 4px; }
+.t-link:hover { background: #d2e3fc; }
+.t-link-del  { color: #aaa; cursor: pointer; font-size: 10px; font-weight: bold; }
+.t-link-del:hover { color: #e53935; }
+
+.task-logs { margin-top: 5px; }
+.log-entry { font-size: 12px; color: #666; padding: 3px 0 3px 8px; border-left: 2px solid #e0e0e0; margin-bottom: 3px; display: flex; gap: 8px; }
+.log-date  { color: #aaa; white-space: nowrap; }
+
+.task-actions { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+.act-btn {
+  font-size: 11px; padding: 3px 10px; border-radius: 10px; border: 1px solid #e0e0e0;
+  background: white; cursor: pointer; color: #555;
+  font-family: 'Noto Sans TC', sans-serif; transition: all .15s;
+}
+.act-btn:hover     { border-color: #1a73e8; color: #1a73e8; }
+.act-btn.del:hover { border-color: #e53935; color: #e53935; }
+
+/* Gantt */
+.gantt-wrap  { overflow-x: auto; }
+.gantt-table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.07); min-width: 800px; }
+.gantt-table th { background: #1a73e8; color: white; padding: 10px 6px; font-size: 12px; font-weight: 600; text-align: center; }
+.gantt-table th.g-phase { width: 50px; }
+.gantt-table th.g-task  { text-align: left; padding-left: 14px; width: 210px; }
+.gantt-table th.g-who   { width: 72px; }
+.gantt-table td { padding: 6px; border-bottom: 1px solid #f0f0f0; font-size: 12px; text-align: center; }
+.gantt-table td.g-task  { text-align: left; padding-left: 14px; font-weight: 500; }
+.gantt-table td.g-phase { color: #888; font-size: 11px; }
+.gantt-table tr:last-child td { border-bottom: none; }
+.gantt-table tr:hover td      { background: #fafbff; }
+.g-cell { height: 24px; border-radius: 3px; cursor: pointer; transition: opacity .2s; margin: 2px; }
+.g-cell:hover              { opacity: .7; }
+.g-cell.filled.done        { background: #43a047; }
+.g-cell.filled.in_progress { background: #fb8c00; }
+.g-cell.filled.not_started { background: #bdbdbd; }
+.g-cell.filled.delayed     { background: #e53935; }
+.g-cell.empty              { background: #f5f5f5; }
+.g-cell.selecting          { background: #90caf9 !important; }
+.gantt-hint   { font-size: 12px; color: #999; margin-top: 10px; }
+.gantt-legend { display: flex; gap: 14px; margin-top: 8px; flex-wrap: wrap; }
+.leg-item     { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #666; }
+.leg-sw       { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+
+/* Push */
+.push-table  { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+.push-table th { background: #1a73e8; color: white; padding: 10px 14px; font-size: 13px; font-weight: 600; text-align: left; }
+.push-table td { padding: 9px 14px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: middle; }
+.push-table tr:last-child td { border-bottom: none; }
+.push-table tr:hover td      { background: #fafbff; }
+.push-month  { font-weight: 700; color: #1a73e8; }
+
+/* Password modal list */
+.mgmt-row    { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+.mgmt-row:last-child { border-bottom: none; }
+.mgmt-name   { font-weight: 500; min-width: 80px; }
+.mgmt-input  { flex: 1; border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; font-size: 13px; font-family: 'Noto Sans TC', sans-serif; }
+.mgmt-input:focus { outline: 2px solid #1a73e8; }
+
+/* Footer */
+.footer       { background: white; border-top: 1px solid #e0e0e0; padding: 14px 24px; margin-top: 16px; }
+.footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.footer-hint  { font-size: 12px; color: #888; }
+.penalty      { font-size: 12px; color: #e53935; background: #ffebee; padding: 5px 10px; border-radius: 6px; margin-top: 4px; display: inline-block; }
+.footer-btns  { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn          { padding: 7px 14px; border-radius: 7px; border: none; cursor: pointer; font-size: 13px; font-family: 'Noto Sans TC', sans-serif; transition: all .2s; }
+.btn-primary  { background: #1a73e8; color: white; }
+.btn-primary:hover  { background: #1557b0; }
+.btn-secondary { background: white; color: #555; border: 1px solid #ddd; }
+.btn-secondary:hover { border-color: #1a73e8; color: #1a73e8; }
+.btn-danger   { background: white; color: #e53935; border: 1px solid #e53935; }
+.btn-danger:hover { background: #ffebee; }
+
+/* Modal */
+.modal-bg  { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 999; align-items: center; justify-content: center; }
+.modal-bg.open { display: flex; }
+.modal-box { background: white; border-radius: 12px; padding: 24px; width: 90%; max-width: 420px; box-shadow: 0 10px 40px rgba(0,0,0,.2); }
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+.form-group  { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.form-group label { font-size: 13px; color: #555; }
+.form-group input, .form-group select, .form-group textarea {
+  border: 1.5px solid #ddd; border-radius: 7px; padding: 8px 10px;
+  font-size: 14px; font-family: 'Noto Sans TC', sans-serif;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none; border-color: #1a73e8;
+}
+.form-group textarea { resize: vertical; min-height: 70px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+/* Offline banner */
+.offline-bar {
+  background: #ffc107; color: #333; text-align: center; padding: 6px; font-size: 13px; display: none;
+}
+.offline-bar.show { display: block; }
+
+@media (max-width: 700px) {
+  .content { padding: 12px 14px; }
+  .header  { padding: 14px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════ LOGIN ════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">🏥</div>
+    <div class="login-title">量六力 LINE OA 專案追蹤表</div>
+    <div class="login-sub">健康盟股份有限公司 · 內部系統</div>
+    <form class="login-form" onsubmit="doLogin(event)">
+      <div>
+        <label>帳號（姓名）</label>
+        <input id="loginUser" type="text" placeholder="Tina / Jennifer / Joey / CC" autocomplete="username">
+      </div>
+      <div>
+        <label>密碼</label>
+        <input id="loginPass" type="password" placeholder="請輸入密碼" autocomplete="current-password">
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <button type="submit" class="login-btn" id="loginBtn">登入</button>
+    </form>
+    <div class="api-warn" id="apiWarn">
+      ⚠️ 無法連線到後端伺服器。<br>
+      請確認伺服器已啟動，或修改頁面頂端的 <code>API_URL</code> 設定。
+    </div>
+    <div class="login-hint">預設密碼：Tina → <code>tina2026</code> &nbsp;|&nbsp; 其他 → <code>hl2026</code></div>
+  </div>
+</div>
+
+<!-- ════ APP ════ -->
+<div id="app">
+  <div class="offline-bar" id="offlineBar">⚠️ 與伺服器失去連線，目前顯示的是暫存資料，修改可能無法儲存</div>
+
+  <div class="header">
+    <div class="header-row1">
+      <div>
+        <div class="header-title">量六力 LINE OA 專案追蹤表</div>
+        <div class="header-sub">115 年長者量六力 LINE OA 行銷宣導計畫</div>
+      </div>
+      <div class="header-user">
+        <div class="user-badge">👤 <span id="currentUserName">-</span></div>
+        <button class="logout-btn" onclick="doLogout()">登出</button>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="header-meta-item"><span class="lbl">委託機關：</span>衛生福利部國民健康署</div>
+      <div class="header-meta-item"><span class="lbl">執行單位：</span>健康盟股份有限公司</div>
+      <div class="header-meta-item"><span class="lbl">預算：</span>NT$3,350,000</div>
+      <div class="header-meta-item"><span class="lbl">履約期限：</span>決標日 ～ 民國 115 年 12 月 31 日</div>
+    </div>
+  </div>
+
+  <div class="progress-bar-container">
+    <div class="progress-info" id="progressText">載入中…</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="sync-status">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncText">已同步</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('tasks',this)">工作項目追蹤</button>
+      <button class="tab-btn"        onclick="switchTab('gantt',this)">時程甘特圖</button>
+      <button class="tab-btn"        onclick="switchTab('push',this)">每月推播排程</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Tasks -->
+    <div id="tab-tasks" class="tab-pane active">
+      <div class="filter-bar">
+        <button class="filter-btn active" data-f="all"         onclick="setFilter('all',this)">全部 <span class="filter-count" id="fc-all"></span></button>
+        <button class="filter-btn"        data-f="done"        onclick="setFilter('done',this)">已完成 <span class="filter-count" id="fc-done"></span></button>
+        <button class="filter-btn"        data-f="in_progress" onclick="setFilter('in_progress',this)">進行中 <span class="filter-count" id="fc-in_progress"></span></button>
+        <button class="filter-btn"        data-f="delayed"     onclick="setFilter('delayed',this)">延遲 <span class="filter-count" id="fc-delayed"></span></button>
+        <button class="filter-btn"        data-f="not_started" onclick="setFilter('not_started',this)">未開始 <span class="filter-count" id="fc-not_started"></span></button>
+      </div>
+      <div id="taskList"></div>
+    </div>
+
+    <!-- Gantt -->
+    <div id="tab-gantt" class="tab-pane">
+      <div class="gantt-wrap">
+        <table class="gantt-table">
+          <thead>
+            <tr>
+              <th class="g-phase">期</th>
+              <th class="g-task">工作項目</th>
+              <th class="g-who">負責人</th>
+              <th>3月</th><th>4月</th><th>5月</th><th>6月</th><th>7月</th>
+              <th>8月</th><th>9月</th><th>10月</th><th>11月</th><th>12月</th>
+            </tr>
+          </thead>
+          <tbody id="ganttBody"></tbody>
+        </table>
+      </div>
+      <div class="gantt-hint">💡 點擊格子調整時程：第一下設起始月、第二下設結束月（同任務）。</div>
+      <div class="gantt-legend">
+        <div class="leg-item"><div class="leg-sw" style="background:#43a047"></div>已完成</div>
+        <div class="leg-item"><div class="leg-sw" style="background:#fb8c00"></div>進行中</div>
+        <div class="leg-item"><div class="leg-sw" style="background:#bdbdbd"></div>未開始</div>
+        <div class="leg-item"><div class="leg-sw" style="background:#e53935"></div>延遲</div>
+      </div>
+    </div>
+
+    <!-- Push -->
+    <div id="tab-push" class="tab-pane">
+      <table class="push-table">
+        <thead>
+          <tr>
+            <th>月份</th><th>件數</th><th>主題方向</th>
+            <th>送審截止</th><th>後台完成</th><th>負責人</th><th>狀態</th><th>備註</th>
+          </tr>
+        </thead>
+        <tbody id="pushBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-hint">點擊任意欄位可直接編輯，修改後自動同步至伺服器 &nbsp;|&nbsp; 每 30 秒自動重新整理</div>
+        <div class="penalty">⚠️ 逾期罰則：每逾期 1 日，依各分項契約價金 1‰ 計罰</div>
+      </div>
+      <div class="footer-btns">
+        <button class="btn btn-secondary" onclick="forceRefresh()">🔄 立即重新整理</button>
+        <button class="btn btn-secondary" onclick="openPwdModal()">🔑 管理密碼</button>
+        <button class="btn btn-danger"    onclick="confirmReset()">⚠️ 重設資料</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+<div class="modal-bg" id="modalLink">
+  <div class="modal-box">
+    <div class="modal-title">🔗 新增相關連結</div>
+    <div class="form-group"><label>顯示名稱</label><input id="mLinkLabel" type="text" placeholder="例：Google Drive"></div>
+    <div class="form-group"><label>網址 (URL)</label><input id="mLinkUrl" type="url" placeholder="https://"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalLink')">取消</button>
+      <button class="btn btn-primary"   onclick="confirmLink()">新增</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalLog">
+  <div class="modal-box">
+    <div class="modal-title">📝 新增進度紀錄</div>
+    <div class="form-group"><label>日期</label><input id="mLogDate" type="date"></div>
+    <div class="form-group"><label>進度說明</label><textarea id="mLogText" placeholder="說明此次進度…"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalLog')">取消</button>
+      <button class="btn btn-primary"   onclick="confirmLog()">新增</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalPwd">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-title">🔑 帳號密碼管理</div>
+    <div style="font-size:13px;color:#888;margin-bottom:12px">管理員可變更所有人密碼，一般成員只能改自己的。密碼至少 4 個字元。</div>
+    <div id="pwdList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalPwd')">取消</button>
+      <button class="btn btn-primary"   onclick="savePwds()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// ⚙️ 設定：後端 API 位址（啟動伺服器後填入）
+// 本機測試：http://localhost:5001
+// 雲端部署後改為 https://your-app.onrender.com
+// ════════════════════════════════════════════════
+const API_URL = 'https://liuli-tracker.onrender.com';
+const POLL_MS = 30000; // 每 30 秒自動重新整理
+
+// ── Constants ────────────────────────────────────
+const STATUS_LABELS = { not_started:'未開始', in_progress:'進行中', done:'已完成', delayed:'延遲' };
+const STATUS_CYCLE  = ['not_started','in_progress','done','delayed'];
+const MONTHS        = [3,4,5,6,7,8,9,10,11,12];
+const ASSIGNEES     = ['Tina','Jennifer','Joey','CC'];
+
+// ── State ────────────────────────────────────────
+let D = null;         // { tasks, pushSchedule, config }
+let token = null;
+let currentUser = null;
+let currentFilter = 'all';
+let ganttSel = null;
+let pendingLinkId = null;
+let pendingLogId  = null;
+let saveTimer = null;
+let pollTimer = null;
+let isSaving = false;
+
+// ════════════════════════════════════════════════
+// API HELPERS
+// ════════════════════════════════════════════════
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['X-Token'] = token;
+  const res = await fetch(API_URL + path, { ...opts, headers });
+  if (res.status === 401) { handleExpired(); throw new Error('401'); }
+  return res;
+}
+
+async function apiGet(path) {
+  const res = await api(path);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function apiPost(path, body) {
+  const res = await api(path, { method: 'POST', body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+function handleExpired() {
+  alert('登入已過期，請重新登入');
+  token = null; currentUser = null;
+  localStorage.removeItem('hl_token');
+  localStorage.removeItem('hl_user');
+  showLogin();
+}
+
+// ════════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════════
+async function doLogin(e) {
+  e.preventDefault();
+  const name = document.getElementById('loginUser').value.trim();
+  const pwd  = document.getElementById('loginPass').value;
+  const btn  = document.getElementById('loginBtn');
+  const err  = document.getElementById('loginError');
+  err.style.display = 'none';
+  document.getElementById('apiWarn').style.display = 'none';
+  btn.disabled = true; btn.textContent = '登入中…';
+  try {
+    const data = await apiPost('/api/login', { name, pwd });
+    token = data.token;
+    currentUser = { name: data.name, role: data.role };
+    localStorage.setItem('hl_token', token);
+    localStorage.setItem('hl_user',  JSON.stringify(currentUser));
+    showApp();
+    await loadData();
+    startPolling();
+  } catch(ex) {
+    if (ex.message === '401') {
+      err.textContent = '帳號或密碼錯誤';
+      err.style.display = 'block';
+    } else {
+      document.getElementById('apiWarn').style.display = 'block';
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = '登入';
+  }
+}
+
+async function doLogout() {
+  if (!confirm('確定登出？')) return;
+  try { await api('/api/logout', { method: 'DELETE' }); } catch(_) {}
+  token = null; currentUser = null;
+  localStorage.removeItem('hl_token');
+  localStorage.removeItem('hl_user');
+  stopPolling();
+  showLogin();
+}
+
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginPass').value = '';
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('currentUserName').textContent = currentUser.name;
+}
+
+// Restore session on page load
+async function tryRestoreSession() {
+  const savedToken = localStorage.getItem('hl_token');
+  const savedUser  = localStorage.getItem('hl_user');
+  if (!savedToken || !savedUser) return false;
+  token       = savedToken;
+  currentUser = JSON.parse(savedUser);
+  try {
+    await loadData();
+    showApp();
+    startPolling();
+    return true;
+  } catch(_) {
+    token = null; currentUser = null;
+    localStorage.removeItem('hl_token');
+    localStorage.removeItem('hl_user');
+    return false;
+  }
+}
+
+// ════════════════════════════════════════════════
+// DATA LOAD / SAVE
+// ════════════════════════════════════════════════
+async function loadData() {
+  setSyncState('saving');
+  const data = await apiGet('/api/data');
+  D = data;
+  setOffline(false);
+  setSyncState('saved');
+  render();
+}
+
+function scheduleSave() {
+  setSyncState('saving');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(pushData, 1500);
+}
+
+async function pushData() {
+  if (isSaving) { setTimeout(pushData, 500); return; }
+  isSaving = true;
+  try {
+    await apiPost('/api/data', { tasks: D.tasks, pushSchedule: D.pushSchedule, config: D.config });
+    setOffline(false);
+    setSyncState('saved');
+  } catch(ex) {
+    setOffline(true);
+    setSyncState('error');
+  } finally {
+    isSaving = false;
+  }
+}
+
+// Polling – fetch latest from server every 30 s (skip if currently saving)
+function startPolling() {
+  stopPolling();
+  pollTimer = setInterval(async () => {
+    if (isSaving || saveTimer) return;
+    try {
+      const data = await apiGet('/api/data');
+      D = data;
+      setOffline(false);
+      setSyncState('saved');
+      render();
+    } catch(_) { setOffline(true); setSyncState('error'); }
+  }, POLL_MS);
+}
+function stopPolling() { clearInterval(pollTimer); }
+
+async function forceRefresh() {
+  clearTimeout(saveTimer); saveTimer = null;
+  try { await loadData(); } catch(_) { setOffline(true); }
+}
+
+// ════════════════════════════════════════════════
+// SYNC UI
+// ════════════════════════════════════════════════
+function setSyncState(s) {
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncText');
+  const now = new Date().toLocaleTimeString('zh-TW', { hour:'2-digit', minute:'2-digit' });
+  if      (s === 'saving') { dot.className = 'sync-dot saving'; txt.textContent = '同步中…'; }
+  else if (s === 'error')  { dot.className = 'sync-dot error';  txt.textContent = '連線失敗'; }
+  else                     { dot.className = 'sync-dot';         txt.textContent = `已同步 ${now}`; }
+}
+function setOffline(v) {
+  document.getElementById('offlineBar').classList.toggle('show', v);
+}
+
+// ════════════════════════════════════════════════
+// PASSWORD MANAGEMENT
+// ════════════════════════════════════════════════
+async function openPwdModal() {
+  const users = await apiGet('/api/users');
+  const list  = document.getElementById('pwdList');
+  const isAdmin = currentUser.role === 'admin';
+  list.innerHTML = '';
+  users.forEach(u => {
+    const canEdit = isAdmin || u.name === currentUser.name;
+    const row = document.createElement('div');
+    row.className = 'mgmt-row';
+    row.innerHTML = `
+      <span class="mgmt-name">${escH(u.name)}</span>
+      <input class="mgmt-input" type="password" data-name="${escH(u.name)}"
+        placeholder="輸入新密碼（留空則不變）"
+        ${canEdit ? '' : 'disabled style="background:#f5f5f5;color:#bbb"'}>
+      ${u.role === 'admin' ? '<span style="font-size:11px;color:#1a73e8">管理員</span>' : ''}
+    `;
+    list.appendChild(row);
+  });
+  document.getElementById('modalPwd').classList.add('open');
+}
+
+async function savePwds() {
+  const inputs = document.querySelectorAll('#pwdList .mgmt-input');
+  for (const inp of inputs) {
+    const newPwd = inp.value.trim();
+    if (!newPwd) continue;
+    if (newPwd.length < 4) { alert(`${inp.dataset.name} 的密碼至少 4 個字元`); return; }
+    try {
+      await apiPost('/api/change-password', { name: inp.dataset.name, pwd: newPwd });
+    } catch(ex) {
+      alert(`${inp.dataset.name} 密碼更新失敗：${ex.message}`);
+      return;
+    }
+  }
+  closeModal('modalPwd');
+  alert('密碼已更新');
+}
+
+// ════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════
+function render() {
+  renderProgress();
+  renderFilterCounts();
+  renderTasks();
+  renderGantt();
+  renderPush();
+}
+
+function renderProgress() {
+  const total = D.tasks.length;
+  const done  = D.tasks.filter(t => t.status === 'done').length;
+  const pct   = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('progressText').textContent = `${done} / ${total} 項完成 (${pct}%)`;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function renderFilterCounts() {
+  document.getElementById('fc-all').textContent = D.tasks.length;
+  ['done','in_progress','delayed','not_started'].forEach(s => {
+    document.getElementById('fc-' + s).textContent = D.tasks.filter(t => t.status === s).length;
+  });
+}
+
+function renderTasks() {
+  const container = document.getElementById('taskList');
+  container.innerHTML = '';
+  ['第1期','第2期','第3期'].forEach(phase => {
+    const tasks = D.tasks.filter(t => t.phase === phase);
+    const done  = tasks.filter(t => t.status === 'done').length;
+    const sec   = document.createElement('div');
+    sec.className = 'phase-section';
+    sec.innerHTML = `
+      <div class="phase-header" onclick="togglePhase('${phase}')">
+        <span class="ph-toggle" id="pht-${phase}">▼</span>
+        <span class="ph-title">${phase}</span>
+        <div class="ph-stats">
+          <span class="status-badge done">${done} 完成</span>
+          <span class="status-badge not_started">${tasks.length - done} 未完</span>
+        </div>
+        <button class="add-task-btn" onclick="event.stopPropagation();addTask('${phase}')">＋ 新增任務</button>
+      </div>
+      <div id="phl-${phase}"></div>
+    `;
+    container.appendChild(sec);
+    const list = sec.querySelector('#phl-' + phase);
+    tasks.forEach(t => list.appendChild(buildTaskEl(t)));
+  });
+  applyFilter();
+}
+
+function buildTaskEl(task) {
+  const el = document.createElement('div');
+  el.className = 'task-item' + (currentFilter !== 'all' && task.status !== currentFilter ? ' filtered-out' : '');
+  el.id = 'ti-' + task.id;
+  const links = (task.links || []).map((l,i) =>
+    `<a class="t-link" href="${escH(l.url)}" target="_blank">🔗 ${escH(l.label)}<span class="t-link-del" onclick="event.preventDefault();delLink(${task.id},${i})">×</span></a>`
+  ).join('');
+  const logs = (task.logs || []).slice().sort((a,b) => b.date.localeCompare(a.date)).map(l =>
+    `<div class="log-entry"><span class="log-date">${escH(l.date)}</span><span>${escH(l.text)}</span></div>`
+  ).join('');
+  el.innerHTML = `
+    <div style="padding-top:1px">
+      <div class="status-circle ${task.status}" onclick="cycleStatus(${task.id})" title="點擊切換狀態"></div>
+    </div>
+    <div>
+      <div class="task-name">
+        <span class="editable" data-tid="${task.id}" data-field="task"
+          contenteditable="false" onclick="startEdit(this)" onblur="endEdit(this)" onkeydown="editKey(event,this)"
+        >${escH(task.task)}</span>
+        <span class="status-badge ${task.status}" onclick="cycleStatus(${task.id})">${STATUS_LABELS[task.status]}</span>
+      </div>
+      <div class="task-meta">
+        <span class="meta-item">👤
+          <select class="sel" onchange="saveTaskField(${task.id},'assignee',this.value)">
+            ${ASSIGNEES.map(n => `<option value="${n}" ${task.assignee===n?'selected':''}>${n}</option>`).join('')}
+          </select>
+        </span>
+        <span class="meta-item">📅
+          <input type="date" class="date-input" value="${task.startDate||''}" onchange="saveTaskField(${task.id},'startDate',this.value)">
+          ～
+          <input type="date" class="date-input" value="${task.endDate||''}" onchange="saveTaskField(${task.id},'endDate',this.value)">
+        </span>
+      </div>
+      <div>
+        <span class="task-note editable" data-tid="${task.id}" data-field="note"
+          contenteditable="false" onclick="startEdit(this)" onblur="endEdit(this)" onkeydown="editKey(event,this)"
+          data-ph="點擊新增備註…"
+        >${escH(task.note)}</span>
+      </div>
+      ${links ? `<div class="task-links">${links}</div>` : ''}
+      ${logs  ? `<div class="task-logs">${logs}</div>`   : ''}
+      <div class="task-actions">
+        <button class="act-btn" onclick="openLogModal(${task.id})">＋ 進度紀錄</button>
+        <button class="act-btn" onclick="openLinkModal(${task.id})">🔗 連結</button>
+        <button class="act-btn del" onclick="deleteTask(${task.id})">🗑 刪除</button>
+      </div>
+    </div>
+  `;
+  return el;
+}
+
+function renderGantt() {
+  const tbody = document.getElementById('ganttBody');
+  tbody.innerHTML = '';
+  D.tasks.forEach(task => {
+    const tr = document.createElement('tr');
+    const cells = MONTHS.map(m => {
+      const inRange  = task.ganttStart && task.ganttEnd && m >= task.ganttStart && m <= task.ganttEnd;
+      const selecting = ganttSel && ganttSel.taskId === task.id && m === ganttSel.month;
+      return `<td><div class="g-cell ${selecting ? 'selecting' : (inRange ? 'filled ' + task.status : 'empty')}"
+        onclick="ganttClick(${task.id},${m})"></div></td>`;
+    }).join('');
+    tr.innerHTML = `
+      <td class="g-phase">${task.phase.replace('第','').replace('期','')}</td>
+      <td class="g-task">${escH(task.task)}</td>
+      <td style="text-align:center;font-size:12px">${escH(task.assignee)}</td>
+      ${cells}
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderPush() {
+  const tbody = document.getElementById('pushBody');
+  tbody.innerHTML = '';
+  D.pushSchedule.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="push-month">${escH(row.month)}</span></td>
+      <td><span class="editable" data-pidx="${i}" data-pf="count"
+        contenteditable="false" onclick="startEdit(this)" onblur="endPushEdit(this)" onkeydown="editKey(event,this)"
+      >${escH(row.count)}</span></td>
+      <td style="min-width:180px"><span class="editable" data-pidx="${i}" data-pf="theme"
+        contenteditable="false" onclick="startEdit(this)" onblur="endPushEdit(this)" onkeydown="editKey(event,this)"
+        style="display:block"
+      >${escH(row.theme)}</span></td>
+      <td><span class="editable" data-pidx="${i}" data-pf="審核deadline"
+        contenteditable="false" onclick="startEdit(this)" onblur="endPushEdit(this)" onkeydown="editKey(event,this)"
+      >${escH(row['審核deadline'])}</span></td>
+      <td><span class="editable" data-pidx="${i}" data-pf="後台deadline"
+        contenteditable="false" onclick="startEdit(this)" onblur="endPushEdit(this)" onkeydown="editKey(event,this)"
+      >${escH(row['後台deadline'])}</span></td>
+      <td>
+        <select class="sel" onchange="savePushField(${i},'assignee',this.value)">
+          ${ASSIGNEES.map(n => `<option value="${n}" ${row.assignee===n?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </td>
+      <td><span class="status-badge ${row.status}" style="cursor:pointer" onclick="cyclePush(${i})">${STATUS_LABELS[row.status]}</span></td>
+      <td><span class="editable" data-pidx="${i}" data-pf="note"
+        contenteditable="false" onclick="startEdit(this)" onblur="endPushEdit(this)" onkeydown="editKey(event,this)"
+        data-ph="—"
+      >${escH(row.note)||''}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ════════════════════════════════════════════════
+// INLINE EDIT
+// ════════════════════════════════════════════════
+function startEdit(el) {
+  el.contentEditable = 'true'; el.focus();
+  const r = document.createRange(); r.selectNodeContents(el); r.collapse(false);
+  const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+}
+function editKey(e, el) {
+  if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+  if (e.key === 'Escape') el.contentEditable = 'false';
+}
+function endEdit(el) {
+  el.contentEditable = 'false';
+  const tid   = parseInt(el.dataset.tid);
+  const field = el.dataset.field;
+  const val   = el.innerText.replace(/\n/g,' ').trim();
+  const task  = D.tasks.find(t => t.id === tid);
+  if (!task || task[field] === val) return;
+  task[field] = val;
+  scheduleSave();
+  if (field === 'task') renderGantt();
+}
+function endPushEdit(el) {
+  el.contentEditable = 'false';
+  const idx   = parseInt(el.dataset.pidx);
+  const field = el.dataset.pf;
+  const val   = el.innerText.replace(/\n/g,' ').trim();
+  if (D.pushSchedule[idx][field] === val) return;
+  D.pushSchedule[idx][field] = val;
+  scheduleSave();
+}
+
+// ════════════════════════════════════════════════
+// TASK OPERATIONS
+// ════════════════════════════════════════════════
+function saveTaskField(id, field, val) {
+  const task = D.tasks.find(t => t.id === id);
+  if (!task) return;
+  task[field] = val;
+  scheduleSave();
+  if (field === 'assignee') renderGantt();
+}
+function savePushField(idx, field, val) {
+  D.pushSchedule[idx][field] = val;
+  scheduleSave();
+}
+function cycleStatus(id) {
+  const task = D.tasks.find(t => t.id === id);
+  if (!task) return;
+  task.status = STATUS_CYCLE[(STATUS_CYCLE.indexOf(task.status) + 1) % STATUS_CYCLE.length];
+  scheduleSave();
+  const el = document.getElementById('ti-' + id);
+  if (el) el.replaceWith(buildTaskEl(task));
+  renderProgress(); renderFilterCounts(); renderGantt();
+}
+function cyclePush(idx) {
+  D.pushSchedule[idx].status = STATUS_CYCLE[(STATUS_CYCLE.indexOf(D.pushSchedule[idx].status) + 1) % STATUS_CYCLE.length];
+  scheduleSave(); renderPush();
+}
+function addTask(phase) {
+  const id = D.config.nextId++;
+  D.tasks.push({ id, phase, task: '新任務', status: 'not_started',
+    assignee: currentUser.name, startDate: '', endDate: '', note: '',
+    ganttStart: null, ganttEnd: null, links: [], logs: [] });
+  scheduleSave();
+  renderTasks(); renderGantt(); renderProgress(); renderFilterCounts();
+  setTimeout(() => {
+    const el = document.querySelector(`#ti-${id} [data-field="task"]`);
+    if (el) startEdit(el);
+  }, 60);
+}
+function deleteTask(id) {
+  if (!confirm('確定刪除此任務？')) return;
+  D.tasks = D.tasks.filter(t => t.id !== id);
+  scheduleSave();
+  renderTasks(); renderGantt(); renderProgress(); renderFilterCounts();
+}
+function delLink(taskId, i) {
+  const task = D.tasks.find(t => t.id === taskId);
+  if (!task) return;
+  task.links.splice(i, 1);
+  scheduleSave();
+  const el = document.getElementById('ti-' + taskId);
+  if (el) el.replaceWith(buildTaskEl(task));
+}
+
+// ════════════════════════════════════════════════
+// FILTER & PHASE
+// ════════════════════════════════════════════════
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+  applyFilter();
+}
+function applyFilter() {
+  document.querySelectorAll('.task-item').forEach(el => {
+    const id = parseInt(el.id.replace('ti-',''));
+    const t  = D.tasks.find(t => t.id === id);
+    if (!t) return;
+    el.classList.toggle('filtered-out', currentFilter !== 'all' && t.status !== currentFilter);
+  });
+}
+function togglePhase(phase) {
+  const list   = document.getElementById('phl-' + phase);
+  const toggle = document.getElementById('pht-' + phase);
+  const closed = list.style.display === 'none';
+  list.style.display = closed ? '' : 'none';
+  toggle.classList.toggle('collapsed', !closed);
+}
+
+// ════════════════════════════════════════════════
+// GANTT
+// ════════════════════════════════════════════════
+function ganttClick(taskId, month) {
+  if (!ganttSel) {
+    ganttSel = { taskId, month };
+    renderGantt();
+  } else if (ganttSel.taskId === taskId) {
+    const task = D.tasks.find(t => t.id === taskId);
+    if (task) { task.ganttStart = Math.min(ganttSel.month, month); task.ganttEnd = Math.max(ganttSel.month, month); }
+    ganttSel = null;
+    scheduleSave(); renderGantt();
+  } else {
+    ganttSel = { taskId, month };
+    renderGantt();
+  }
+}
+
+// ════════════════════════════════════════════════
+// MODALS
+// ════════════════════════════════════════════════
+function openLinkModal(id) {
+  pendingLinkId = id;
+  document.getElementById('mLinkLabel').value = '';
+  document.getElementById('mLinkUrl').value   = '';
+  document.getElementById('modalLink').classList.add('open');
+  document.getElementById('mLinkLabel').focus();
+}
+function confirmLink() {
+  const label = document.getElementById('mLinkLabel').value.trim();
+  const url   = document.getElementById('mLinkUrl').value.trim();
+  if (!label || !url) { alert('請填寫名稱與網址'); return; }
+  const task = D.tasks.find(t => t.id === pendingLinkId);
+  if (task) {
+    task.links = task.links || [];
+    task.links.push({ label, url });
+    scheduleSave();
+    const el = document.getElementById('ti-' + task.id);
+    if (el) el.replaceWith(buildTaskEl(task));
+  }
+  closeModal('modalLink');
+}
+function openLogModal(id) {
+  pendingLogId = id;
+  document.getElementById('mLogDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('mLogText').value = '';
+  document.getElementById('modalLog').classList.add('open');
+  document.getElementById('mLogText').focus();
+}
+function confirmLog() {
+  const date = document.getElementById('mLogDate').value;
+  const text = document.getElementById('mLogText').value.trim();
+  if (!date || !text) { alert('請填寫日期與說明'); return; }
+  const task = D.tasks.find(t => t.id === pendingLogId);
+  if (task) {
+    task.logs = task.logs || [];
+    task.logs.push({ date, text });
+    scheduleSave();
+    const el = document.getElementById('ti-' + task.id);
+    if (el) el.replaceWith(buildTaskEl(task));
+  }
+  closeModal('modalLog');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+});
+
+// ════════════════════════════════════════════════
+// TAB SWITCH
+// ════════════════════════════════════════════════
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ════════════════════════════════════════════════
+// RESET
+// ════════════════════════════════════════════════
+async function confirmReset() {
+  if (!confirm('確定重設所有資料為預設值？此操作將覆蓋伺服器上所有人的資料，無法復原。')) return;
+  if (!confirm('再次確認：要重設嗎？')) return;
+  try {
+    await apiPost('/api/reset', {});
+    await loadData();
+  } catch(ex) {
+    alert('重設失敗：伺服器未提供重設功能，請聯繫管理員');
+  }
+}
+
+// ════════════════════════════════════════════════
+// UTILITY
+// ════════════════════════════════════════════════
+function escH(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+// ════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════
+(async () => {
+  const restored = await tryRestoreSession().catch(() => false);
+  if (!restored) showLogin();
+})();
+</script>
+</body>
+</html>
