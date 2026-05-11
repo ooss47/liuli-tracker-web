@@ -516,7 +516,7 @@ const POLL_MS = 30000; // 每 30 秒自動重新整理
 const STATUS_LABELS = { not_started:'未開始', in_progress:'進行中', done:'已完成', delayed:'延遲' };
 const STATUS_CYCLE  = ['not_started','in_progress','done','delayed'];
 const MONTHS        = [3,4,5,6,7,8,9,10,11,12];
-const ASSIGNEES     = ['Tina','Jennifer','Joey','CC'];
+let   assignees     = ['Tina','Jennifer','Joey','CC']; // 載入後從伺服器更新
 
 // ── State ────────────────────────────────────────
 let D = null;         // { tasks, pushSchedule, config }
@@ -647,8 +647,12 @@ async function tryRestoreSession() {
 // ════════════════════════════════════════════════
 async function loadData() {
   setSyncState('saving');
-  const data = await apiGet('/api/data');
+  const [data, users] = await Promise.all([
+    apiGet('/api/data'),
+    apiGet('/api/users').catch(() => null),
+  ]);
   D = data;
+  if (users && Array.isArray(users)) assignees = users.map(u => u.name);
   setOffline(false);
   setSyncState('saved');
   render();
@@ -719,8 +723,11 @@ async function openPwdModal() {
   const list  = document.getElementById('pwdList');
   const isAdmin = currentUser.role === 'admin';
   list.innerHTML = '';
+
+  // 既有使用者
   users.forEach(u => {
     const canEdit = isAdmin || u.name === currentUser.name;
+    const canDel  = isAdmin && u.name !== currentUser.name;
     const row = document.createElement('div');
     row.className = 'mgmt-row';
     row.innerHTML = `
@@ -729,27 +736,81 @@ async function openPwdModal() {
         placeholder="輸入新密碼（留空則不變）"
         ${canEdit ? '' : 'disabled style="background:#f5f5f5;color:#bbb"'}>
       ${u.role === 'admin' ? '<span style="font-size:11px;color:#1a73e8">管理員</span>' : ''}
+      ${canDel ? `<button class="btn btn-danger" style="padding:4px 10px;font-size:12px" onclick="deleteUser('${escH(u.name)}')">🗑</button>` : ''}
     `;
     list.appendChild(row);
   });
+
+  // 新增使用者（僅管理員）
+  if (isAdmin) {
+    const addBox = document.createElement('div');
+    addBox.style.cssText = 'margin-top:18px;padding-top:14px;border-top:2px dashed #ddd';
+    addBox.innerHTML = `
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px;color:#1a73e8">＋ 新增使用者</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center">
+        <input id="newUserName" placeholder="姓名" class="mgmt-input">
+        <input id="newUserPwd"  type="password" placeholder="初始密碼（4 字以上）" class="mgmt-input">
+        <select id="newUserRole" class="mgmt-input" style="flex:0">
+          <option value="member">一般成員</option>
+          <option value="admin">管理員</option>
+        </select>
+        <button class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="addUser()">新增</button>
+      </div>
+    `;
+    list.appendChild(addBox);
+  }
+
   document.getElementById('modalPwd').classList.add('open');
 }
 
+async function addUser() {
+  const name = document.getElementById('newUserName').value.trim();
+  const pwd  = document.getElementById('newUserPwd').value;
+  const role = document.getElementById('newUserRole').value;
+  if (!name) { alert('請輸入姓名'); return; }
+  if (pwd.length < 4) { alert('密碼至少 4 個字元'); return; }
+  try {
+    await apiPost('/api/users', { name, pwd, role });
+    alert(`已新增使用者「${name}」`);
+    await loadData();   // 重新載入 assignees
+    openPwdModal();     // 重新整理列表
+  } catch(ex) {
+    const msg = ex.message.includes('"error"')
+      ? JSON.parse(ex.message).error
+      : '新增失敗';
+    alert(msg);
+  }
+}
+
+async function deleteUser(name) {
+  if (!confirm(`確定刪除使用者「${name}」？\n該使用者所有現有任務不會被刪除，但會無法登入。`)) return;
+  try {
+    const res = await api('/api/users/' + encodeURIComponent(name), { method: 'DELETE' });
+    if (!res.ok) throw new Error(await res.text());
+    await loadData();
+    openPwdModal();
+  } catch(ex) {
+    alert('刪除失敗：' + ex.message);
+  }
+}
+
 async function savePwds() {
-  const inputs = document.querySelectorAll('#pwdList .mgmt-input');
+  const inputs = document.querySelectorAll('#pwdList .mgmt-input[type="password"][data-name]');
+  let changed = 0;
   for (const inp of inputs) {
     const newPwd = inp.value.trim();
     if (!newPwd) continue;
     if (newPwd.length < 4) { alert(`${inp.dataset.name} 的密碼至少 4 個字元`); return; }
     try {
       await apiPost('/api/change-password', { name: inp.dataset.name, pwd: newPwd });
+      changed++;
     } catch(ex) {
       alert(`${inp.dataset.name} 密碼更新失敗：${ex.message}`);
       return;
     }
   }
   closeModal('modalPwd');
-  alert('密碼已更新');
+  if (changed > 0) alert(`已更新 ${changed} 個密碼`);
 }
 
 // ════════════════════════════════════════════════
@@ -829,7 +890,7 @@ function buildTaskEl(task) {
       <div class="task-meta">
         <span class="meta-item">👤
           <select class="sel" onchange="saveTaskField(${task.id},'assignee',this.value)">
-            ${ASSIGNEES.map(n => `<option value="${n}" ${task.assignee===n?'selected':''}>${n}</option>`).join('')}
+            ${assignees.map(n => `<option value="${n}" ${task.assignee===n?'selected':''}>${n}</option>`).join('')}
           </select>
         </span>
         <span class="meta-item">📅
@@ -899,7 +960,7 @@ function renderPush() {
       >${escH(row['後台deadline'])}</span></td>
       <td>
         <select class="sel" onchange="savePushField(${i},'assignee',this.value)">
-          ${ASSIGNEES.map(n => `<option value="${n}" ${row.assignee===n?'selected':''}>${n}</option>`).join('')}
+          ${assignees.map(n => `<option value="${n}" ${row.assignee===n?'selected':''}>${n}</option>`).join('')}
         </select>
       </td>
       <td><span class="status-badge ${row.status}" style="cursor:pointer" onclick="cyclePush(${i})">${STATUS_LABELS[row.status]}</span></td>
