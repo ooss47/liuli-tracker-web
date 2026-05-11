@@ -268,6 +268,18 @@ input.date-input {
 .form-group textarea { resize: vertical; min-height: 70px; }
 .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 
+/* ── Attachments ── */
+.attach-zone  { border: 1.5px dashed #d0d0d0; border-radius: 7px; padding: 10px 12px; cursor: pointer; font-size: 14px; color: #888; text-align: center; transition: border-color .2s; }
+.attach-zone:hover { border-color: #1a73e8; color: #1a73e8; }
+.attach-list  { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.attach-item  { display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: #f8f9fa; border-radius: 6px; font-size: 14px; }
+.attach-name  { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #333; max-width: 220px; }
+.attach-dl    { color: #1a73e8; text-decoration: none; font-size: 13px; padding: 2px 8px; background: #e8f0fe; border-radius: 6px; white-space: nowrap; }
+.attach-dl:hover { background: #d2e3fc; }
+.attach-del   { color: #bbb; cursor: pointer; font-size: 16px; line-height: 1; margin-left: auto; }
+.attach-del:hover { color: #e53935; }
+.attach-uploading { font-size: 13px; color: #fb8c00; }
+
 /* Offline banner */
 .offline-bar {
   background: #ffc107; color: #333; text-align: center; padding: 6px; font-size: 15px; display: none;
@@ -477,7 +489,7 @@ input.date-input {
         <button class="act-btn" style="font-size:14px;padding:6px 14px" onclick="openMeetingModal()">＋ 新增會議記錄</button>
       </div>
       <table class="push-table">
-        <thead><tr><th>日期</th><th>會議主題</th><th>出席人員</th><th>決議事項</th><th>後續行動</th><th>操作</th></tr></thead>
+        <thead><tr><th>日期</th><th>會議主題</th><th>出席人員</th><th>決議事項</th><th>後續行動</th><th>附件</th><th>操作</th></tr></thead>
         <tbody id="meetingBody"></tbody>
       </table>
     </div>
@@ -488,7 +500,7 @@ input.date-input {
         <button class="act-btn" style="font-size:14px;padding:6px 14px" onclick="openDocModal()">＋ 新增公文記錄</button>
       </div>
       <table class="push-table">
-        <thead><tr><th>日期</th><th>文號</th><th>方向</th><th>主旨</th><th>狀態</th><th>備註</th><th>操作</th></tr></thead>
+        <thead><tr><th>日期</th><th>文號</th><th>方向</th><th>主旨</th><th>狀態</th><th>備註</th><th>附件</th><th>操作</th></tr></thead>
         <tbody id="docBody"></tbody>
       </table>
     </div>
@@ -621,9 +633,17 @@ input.date-input {
     <div class="form-group"><label>出席人員</label><input id="mMeetAttendees" type="text" placeholder="例：Tina、Joey、CC"></div>
     <div class="form-group"><label>決議事項</label><textarea id="mMeetDecisions" placeholder="本次會議決議…" rows="3"></textarea></div>
     <div class="form-group"><label>後續行動</label><textarea id="mMeetActions" placeholder="待辦事項、負責人…" rows="3"></textarea></div>
+    <div class="form-group">
+      <label>📎 附件（PDF / Word，每檔最大 10MB）</label>
+      <label class="attach-zone" onclick="document.getElementById('mMeetFileInput').click()">
+        ＋ 點擊選擇檔案（PDF / .doc / .docx）
+      </label>
+      <input id="mMeetFileInput" type="file" accept=".pdf,.doc,.docx" multiple style="display:none" onchange="handleMeetFileSelect(this)">
+      <div id="mMeetAttachList" class="attach-list"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modalMeeting')">取消</button>
-      <button class="btn btn-primary" onclick="confirmMeeting()">儲存</button>
+      <button class="btn btn-primary" id="mMeetSaveBtn" onclick="confirmMeeting()">儲存</button>
     </div>
   </div>
 </div>
@@ -648,9 +668,17 @@ input.date-input {
       </select>
     </div>
     <div class="form-group"><label>備註</label><input id="mDocNote" type="text" placeholder="補充說明…"></div>
+    <div class="form-group">
+      <label>📎 附件（PDF / Word，每檔最大 10MB）</label>
+      <label class="attach-zone" onclick="document.getElementById('mDocFileInput').click()">
+        ＋ 點擊選擇檔案（PDF / .doc / .docx）
+      </label>
+      <input id="mDocFileInput" type="file" accept=".pdf,.doc,.docx" multiple style="display:none" onchange="handleDocFileSelect(this)">
+      <div id="mDocAttachList" class="attach-list"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modalDoc')">取消</button>
-      <button class="btn btn-primary" onclick="confirmDoc()">儲存</button>
+      <button class="btn btn-primary" id="mDocSaveBtn" onclick="confirmDoc()">儲存</button>
     </div>
   </div>
 </div>
@@ -1693,6 +1721,98 @@ function deleteExpense(id) {
 }
 
 // ════════════════════════════════════════════════
+// FILE ATTACHMENT HELPERS
+// ════════════════════════════════════════════════
+let meetAttachments = [];  // {id, name} — attachments for the meeting modal
+let docAttachments  = [];  // {id, name} — attachments for the doc modal
+
+async function uploadFile(file) {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(API_URL + '/api/upload', {
+    method: 'POST',
+    headers: { 'X-Token': token },
+    body: form
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || '上傳失敗');
+  return json; // {id, name}
+}
+
+async function removeAttachment(fileId, listArr, renderFn) {
+  try { await fetch(API_URL + '/api/files/' + fileId, { method: 'DELETE', headers: { 'X-Token': token } }); } catch(_) {}
+  const idx = listArr.findIndex(a => a.id === fileId);
+  if (idx > -1) listArr.splice(idx, 1);
+  renderFn();
+}
+
+function renderAttachList(containerId, listArr, removeFn) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!listArr.length) { el.innerHTML = ''; return; }
+  el.innerHTML = listArr.map(a => `
+    <div class="attach-item">
+      <span class="attach-name" title="${escH(a.name)}">📄 ${escH(a.name)}</span>
+      <a class="attach-dl" href="${escH(API_URL)}/api/files/${escH(a.id)}?t=${encodeURIComponent(token)}" target="_blank">下載</a>
+      <span class="attach-del" onclick="${removeFn}('${escH(a.id)}')" title="移除">×</span>
+    </div>`).join('');
+}
+
+async function handleMeetFileSelect(input) {
+  const btn = document.getElementById('mMeetSaveBtn');
+  if (btn) btn.disabled = true;
+  for (const file of input.files) {
+    const el = document.getElementById('mMeetAttachList');
+    const tmp = document.createElement('div');
+    tmp.className = 'attach-uploading';
+    tmp.textContent = `⏫ 上傳中：${file.name}`;
+    if (el) el.appendChild(tmp);
+    try {
+      const result = await uploadFile(file);
+      meetAttachments.push(result);
+    } catch(ex) {
+      alert(`${file.name} 上傳失敗：${ex.message}`);
+    } finally {
+      tmp.remove();
+    }
+  }
+  input.value = '';
+  renderAttachList('mMeetAttachList', meetAttachments, 'removeMeetAttach');
+  if (btn) btn.disabled = false;
+}
+
+function removeMeetAttach(fileId) {
+  removeAttachment(fileId, meetAttachments, () => renderAttachList('mMeetAttachList', meetAttachments, 'removeMeetAttach'));
+}
+
+async function handleDocFileSelect(input) {
+  const btn = document.getElementById('mDocSaveBtn');
+  if (btn) btn.disabled = true;
+  for (const file of input.files) {
+    const el = document.getElementById('mDocAttachList');
+    const tmp = document.createElement('div');
+    tmp.className = 'attach-uploading';
+    tmp.textContent = `⏫ 上傳中：${file.name}`;
+    if (el) el.appendChild(tmp);
+    try {
+      const result = await uploadFile(file);
+      docAttachments.push(result);
+    } catch(ex) {
+      alert(`${file.name} 上傳失敗：${ex.message}`);
+    } finally {
+      tmp.remove();
+    }
+  }
+  input.value = '';
+  renderAttachList('mDocAttachList', docAttachments, 'removeDocAttach');
+  if (btn) btn.disabled = false;
+}
+
+function removeDocAttach(fileId) {
+  removeAttachment(fileId, docAttachments, () => renderAttachList('mDocAttachList', docAttachments, 'removeDocAttach'));
+}
+
+// ════════════════════════════════════════════════
 // MEETING RECORDS
 // ════════════════════════════════════════════════
 let pendingMeetingId = null;
@@ -1704,19 +1824,25 @@ function renderMeetings() {
   const cnt = document.getElementById('meetCount');
   if (cnt) cnt.textContent = meetings.length;
   const rows = meetings.slice().sort((a,b) => b.date.localeCompare(a.date));
-  tbody.innerHTML = rows.length ? rows.map(m => `
-    <tr>
+  tbody.innerHTML = rows.length ? rows.map(m => {
+    const atts = (m.attachments || []);
+    const attHtml = atts.length
+      ? atts.map(a => `<a class="attach-dl" href="${escH(API_URL)}/api/files/${escH(a.id)}?t=${encodeURIComponent(token)}" target="_blank">📄 ${escH(a.name)}</a>`).join('<br>')
+      : '—';
+    return `<tr>
       <td style="white-space:nowrap">${escH(m.date)}</td>
       <td style="font-weight:600">${escH(m.title)}</td>
       <td style="max-width:130px">${escH(m.attendees)}</td>
       <td style="max-width:220px;white-space:pre-wrap;line-height:1.6">${escH(m.decisions)}</td>
       <td style="max-width:220px;white-space:pre-wrap;line-height:1.6">${escH(m.actions)}</td>
+      <td style="min-width:120px">${attHtml}</td>
       <td style="white-space:nowrap">
         <button class="act-btn" onclick="openMeetingModal(${m.id})">✏️</button>
         <button class="act-btn del" onclick="deleteMeeting(${m.id})">🗑</button>
       </td>
-    </tr>`).join('')
-    : '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:24px">尚無會議記錄</td></tr>';
+    </tr>`;
+  }).join('')
+    : '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px">尚無會議記錄</td></tr>';
 }
 
 function openMeetingModal(id) {
@@ -1727,6 +1853,9 @@ function openMeetingModal(id) {
   document.getElementById('mMeetAttendees').value = m ? m.attendees : '';
   document.getElementById('mMeetDecisions').value = m ? m.decisions : '';
   document.getElementById('mMeetActions').value   = m ? m.actions   : '';
+  meetAttachments = m ? JSON.parse(JSON.stringify(m.attachments || [])) : [];
+  renderAttachList('mMeetAttachList', meetAttachments, 'removeMeetAttach');
+  document.getElementById('mMeetFileInput').value = '';
   document.getElementById('modalMeeting').classList.add('open');
   document.getElementById('mMeetTitle').focus();
 }
@@ -1737,12 +1866,13 @@ function confirmMeeting() {
   if (!date || !title) { alert('請填寫日期與會議主題'); return; }
   D.meetings = D.meetings || [];
   const obj = {
-    id:        pendingMeetingId || Date.now(),
+    id:          pendingMeetingId || Date.now(),
     date,
     title,
-    attendees: document.getElementById('mMeetAttendees').value.trim(),
-    decisions: document.getElementById('mMeetDecisions').value.trim(),
-    actions:   document.getElementById('mMeetActions').value.trim()
+    attendees:   document.getElementById('mMeetAttendees').value.trim(),
+    decisions:   document.getElementById('mMeetDecisions').value.trim(),
+    actions:     document.getElementById('mMeetActions').value.trim(),
+    attachments: meetAttachments.slice()
   };
   if (pendingMeetingId) {
     const idx = D.meetings.findIndex(x => x.id === pendingMeetingId);
@@ -1776,20 +1906,26 @@ function renderDocs() {
   const cnt = document.getElementById('docCount');
   if (cnt) cnt.textContent = docs.length;
   const rows = docs.slice().sort((a,b) => b.date.localeCompare(a.date));
-  tbody.innerHTML = rows.length ? rows.map(d => `
-    <tr>
+  tbody.innerHTML = rows.length ? rows.map(d => {
+    const atts = (d.attachments || []);
+    const attHtml = atts.length
+      ? atts.map(a => `<a class="attach-dl" href="${escH(API_URL)}/api/files/${escH(a.id)}?t=${encodeURIComponent(token)}" target="_blank">📄 ${escH(a.name)}</a>`).join('<br>')
+      : '—';
+    return `<tr>
       <td style="white-space:nowrap">${escH(d.date)}</td>
       <td style="max-width:160px;font-size:13px">${escH(d.docNo)}</td>
       <td style="white-space:nowrap">${DOC_DIR_LABEL[d.dir]||d.dir}</td>
       <td style="max-width:260px;white-space:pre-wrap;line-height:1.6">${escH(d.subject)}</td>
       <td style="white-space:nowrap;font-weight:600;color:${DOC_STATUS_COLOR[d.status]||'#666'}">${escH(d.status)}</td>
       <td style="max-width:140px">${escH(d.note)}</td>
+      <td style="min-width:120px">${attHtml}</td>
       <td style="white-space:nowrap">
         <button class="act-btn" onclick="openDocModal(${d.id})">✏️</button>
         <button class="act-btn del" onclick="deleteDoc(${d.id})">🗑</button>
       </td>
-    </tr>`).join('')
-    : '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px">尚無公文記錄</td></tr>';
+    </tr>`;
+  }).join('')
+    : '<tr><td colspan="8" style="text-align:center;color:#aaa;padding:24px">尚無公文記錄</td></tr>';
 }
 
 function openDocModal(id) {
@@ -1801,6 +1937,9 @@ function openDocModal(id) {
   document.getElementById('mDocSubject').value = d ? d.subject : '';
   document.getElementById('mDocStatus').value  = d ? d.status  : '處理中';
   document.getElementById('mDocNote').value    = d ? d.note    : '';
+  docAttachments = d ? JSON.parse(JSON.stringify(d.attachments || [])) : [];
+  renderAttachList('mDocAttachList', docAttachments, 'removeDocAttach');
+  document.getElementById('mDocFileInput').value = '';
   document.getElementById('modalDoc').classList.add('open');
 }
 
@@ -1810,13 +1949,14 @@ function confirmDoc() {
   if (!date || !subject) { alert('請填寫日期與主旨'); return; }
   D.docs = D.docs || [];
   const obj = {
-    id:      pendingDocId || Date.now(),
+    id:          pendingDocId || Date.now(),
     date,
-    docNo:   document.getElementById('mDocNo').value.trim(),
-    dir:     document.getElementById('mDocDir').value,
+    docNo:       document.getElementById('mDocNo').value.trim(),
+    dir:         document.getElementById('mDocDir').value,
     subject,
-    status:  document.getElementById('mDocStatus').value,
-    note:    document.getElementById('mDocNote').value.trim()
+    status:      document.getElementById('mDocStatus').value,
+    note:        document.getElementById('mDocNote').value.trim(),
+    attachments: docAttachments.slice()
   };
   if (pendingDocId) {
     const idx = D.docs.findIndex(x => x.id === pendingDocId);
