@@ -184,8 +184,9 @@ input.date-input {
 .t-link-del:hover { color: #e53935; }
 
 .task-logs { margin-top: 5px; }
-.log-entry { font-size: 14px; color: #666; padding: 3px 0 3px 8px; border-left: 2px solid #e0e0e0; margin-bottom: 3px; display: flex; gap: 8px; }
+.log-entry { font-size: 14px; color: #666; padding: 3px 0 3px 8px; border-left: 2px solid #e0e0e0; margin-bottom: 3px; display: flex; align-items: center; gap: 8px; }
 .log-date  { color: #aaa; white-space: nowrap; }
+.log-done  { text-decoration: line-through; color: #bbb; }
 
 .task-actions { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
 .act-btn {
@@ -417,7 +418,7 @@ input.date-input {
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;">
         <div style="background:linear-gradient(135deg,#1a73e8,#0d47a1);color:white;border-radius:10px;padding:16px;">
           <div style="font-size:13px;opacity:0.85">📊 總預算</div>
-          <div style="font-size:22px;font-weight:700;margin-top:6px">NT$ 3,500,000</div>
+          <div style="font-size:22px;font-weight:700;margin-top:6px">NT$ 3,350,000</div>
           <div style="font-size:11px;opacity:0.75;margin-top:4px">依 PDF 預算經費</div>
         </div>
         <div style="background:white;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07);">
@@ -432,7 +433,7 @@ input.date-input {
         </div>
         <div style="background:white;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07);">
           <div style="font-size:13px;color:#666">💰 預算餘額</div>
-          <div style="font-size:22px;font-weight:700;color:#43a047;margin-top:6px" id="bgRemain">NT$ 3,500,000</div>
+          <div style="font-size:22px;font-weight:700;color:#43a047;margin-top:6px" id="bgRemain">NT$ 3,350,000</div>
           <div style="font-size:11px;color:#999;margin-top:4px">總預算 − 實際花費</div>
         </div>
       </div>
@@ -992,7 +993,7 @@ function renderBudget() {
   const tbody = document.getElementById('budgetBody');
   if (!tbody) return;
   tbody.innerHTML = '';
-  const TOTAL = 3500000;
+  const TOTAL = 3350000;
   let est = 0, act = 0;
   (D.budget || []).forEach((row, i) => {
     est += Number(row.estimated) || 0;
@@ -1119,8 +1120,12 @@ function buildTaskEl(task) {
   const links = (task.links || []).map((l,i) =>
     `<a class="t-link" href="${escH(l.url)}" target="_blank">🔗 ${escH(l.label)}<span class="t-link-del" onclick="event.preventDefault();delLink(${task.id},${i})">×</span></a>`
   ).join('');
-  const logs = (task.logs || []).slice().sort((a,b) => b.date.localeCompare(a.date)).map(l =>
-    `<div class="log-entry"><span class="log-date">${escH(l.date)}</span><span>${escH(l.text)}</span></div>`
+  const logs = (task.logs || []).map((l,i) => ({...l, _i:i})).sort((a,b) => b.date.localeCompare(a.date)).map(l =>
+    `<div class="log-entry">
+      <input type="checkbox" ${l.done?'checked':''} onchange="toggleLog(${task.id},${l._i})" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:#1a73e8">
+      <span class="log-date">${escH(l.date)}</span>
+      <span class="${l.done?'log-done':''}">${escH(l.text)}</span>
+    </div>`
   ).join('');
   el.innerHTML = `
     <div style="padding-top:1px">
@@ -1406,6 +1411,14 @@ function confirmLog() {
     if (el) el.replaceWith(buildTaskEl(task));
   }
   closeModal('modalLog');
+}
+function toggleLog(taskId, logIdx) {
+  const task = D.tasks.find(t => t.id === taskId);
+  if (!task || !task.logs[logIdx]) return;
+  task.logs[logIdx].done = !task.logs[logIdx].done;
+  scheduleSave();
+  const el = document.getElementById('ti-' + task.id);
+  if (el) el.replaceWith(buildTaskEl(task));
 }
 let pendingPushIdx = null;
 function openPushContent(idx) {
