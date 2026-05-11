@@ -281,6 +281,27 @@ input.date-input {
 </head>
 <body>
 
+<!-- ════ GATE (公司密碼閘) ════ -->
+<div id="gateScreen" style="display:none; min-height:100vh; align-items:center; justify-content:center; background:linear-gradient(135deg,#1a73e8 0%,#0d47a1 100%); position:fixed; inset:0; z-index:10000;">
+  <div style="background:white; border-radius:16px; padding:40px 36px; width:360px; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+    <div style="text-align:center; font-size:36px; margin-bottom:8px;">🔒</div>
+    <div style="text-align:center; font-size:18px; font-weight:700; color:#1a73e8; margin-bottom:4px;">需要存取授權</div>
+    <div style="text-align:center; font-size:13px; color:#888; margin-bottom:28px;">此網站僅限健康盟內部使用</div>
+    <form onsubmit="checkGate(event)" style="display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <label style="font-size:13px; color:#555; display:block; margin-bottom:4px;">公司存取密碼</label>
+        <input id="gateInput" type="password" placeholder="請洽 Tina 取得密碼" autofocus
+          style="width:100%; padding:10px 14px; border:1.5px solid #ddd; border-radius:8px; font-size:14px; font-family:'Noto Sans TC',sans-serif;">
+      </div>
+      <div id="gateError" style="background:#ffebee; color:#c62828; border-radius:6px; padding:8px 12px; font-size:13px; text-align:center; display:none;">密碼錯誤</div>
+      <button type="submit"
+        style="background:#1a73e8; color:white; border:none; border-radius:8px; padding:12px; font-size:15px; font-weight:600; font-family:'Noto Sans TC',sans-serif; cursor:pointer; margin-top:4px;">
+        進入
+      </button>
+    </form>
+  </div>
+</div>
+
 <!-- ════ LOGIN ════ -->
 <div id="loginScreen">
   <div class="login-card">
@@ -303,7 +324,6 @@ input.date-input {
       ⚠️ 無法連線到後端伺服器。<br>
       請確認伺服器已啟動，或修改頁面頂端的 <code>API_URL</code> 設定。
     </div>
-    <div class="login-hint">預設密碼：Tina → <code>tina2026</code> &nbsp;|&nbsp; 其他 → <code>hl2026</code></div>
   </div>
 </div>
 
@@ -453,9 +473,41 @@ input.date-input {
 
 <script>
 // ════════════════════════════════════════════════
-// ⚙️ 設定：後端 API 位址（啟動伺服器後填入）
-// 本機測試：http://localhost:5001
-// 雲端部署後改為 https://your-app.onrender.com
+// 🔒 公司密碼閘 — 阻擋未授權訪客看到登入畫面
+// ════════════════════════════════════════════════
+const GATE_HASH = 'cb6656f250c0bf2626b5faf8571a55e19a8ebdd95c34e860be112db18aa4f13f';
+const GATE_KEY  = 'hl_gate_v1';
+
+async function sha256(str) {
+  const buf  = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkGate(e) {
+  e.preventDefault();
+  const input = document.getElementById('gateInput').value;
+  const h     = await sha256(input);
+  if (h === GATE_HASH) {
+    localStorage.setItem(GATE_KEY, '1');
+    document.getElementById('gateScreen').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+  } else {
+    document.getElementById('gateError').style.display = 'block';
+    document.getElementById('gateInput').value = '';
+  }
+}
+
+// 啟動前先檢查閘門
+(function () {
+  if (localStorage.getItem(GATE_KEY) !== '1') {
+    document.getElementById('gateScreen').style.display = 'flex';
+    document.getElementById('loginScreen').style.display = 'none';
+  }
+})();
+
+// ════════════════════════════════════════════════
+// ⚙️ 設定：後端 API 位址
 // ════════════════════════════════════════════════
 const API_URL = 'https://liuli-tracker.onrender.com';
 const POLL_MS = 30000; // 每 30 秒自動重新整理
@@ -553,9 +605,15 @@ async function doLogout() {
 }
 
 function showLogin() {
-  document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginPass').value = '';
+  // 通過閘門後才顯示登入畫面
+  if (localStorage.getItem(GATE_KEY) === '1') {
+    document.getElementById('loginScreen').style.display = 'flex';
+  } else {
+    document.getElementById('gateScreen').style.display = 'flex';
+    document.getElementById('loginScreen').style.display = 'none';
+  }
 }
 
 function showApp() {
