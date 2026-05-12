@@ -72,11 +72,20 @@ body { font-family: 'Noto Sans TC', sans-serif; background: #f0f4f8; color: #333
 .progress-info  { font-size: 15px; color: #555; white-space: nowrap; }
 .progress-track { flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
 .progress-fill  { height: 100%; background: linear-gradient(90deg,#43a047,#66bb6a); border-radius: 4px; transition: width .5s; }
-.sync-status    { white-space: nowrap; display: flex; align-items: center; gap: 6px; font-size: 14px; color: #888; }
+.sync-status    { white-space: nowrap; display: flex; align-items: center; gap: 8px; font-size: 14px; color: #888; }
 .sync-dot       { width: 7px; height: 7px; border-radius: 50%; background: #43a047; }
 .sync-dot.saving { background: #fb8c00; animation: blink .8s infinite; }
 .sync-dot.error  { background: #e53935; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+#manualSaveBtn {
+  padding: 4px 14px; font-size: 13px; font-weight: 600; border-radius: 16px; border: none; cursor: pointer;
+  background: #1a73e8; color: white; transition: all .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+#manualSaveBtn:hover:not(:disabled) { background: #1557b0; transform: translateY(-1px); }
+#manualSaveBtn:disabled { background: #888; cursor: default; transform: none; }
+#manualSaveBtn.saved  { background: #43a047; }
+#manualSaveBtn.saving { background: #fb8c00; }
+#manualSaveBtn.error  { background: #e53935; }
 
 /* Tabs */
 .tabs    { background: white; border-bottom: 1px solid #e0e0e0; padding: 0 24px; }
@@ -373,6 +382,7 @@ input.date-input {
     <div class="progress-info" id="progressText">載入中…</div>
     <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
     <div class="sync-status">
+      <button id="manualSaveBtn" onclick="manualSave()" title="立即儲存">💾 儲存</button>
       <div class="sync-dot" id="syncDot"></div>
       <span id="syncText">已同步</span>
     </div>
@@ -970,10 +980,27 @@ async function forceRefresh() {
 function setSyncState(s) {
   const dot = document.getElementById('syncDot');
   const txt = document.getElementById('syncText');
+  const btn = document.getElementById('manualSaveBtn');
   const now = new Date().toLocaleTimeString('zh-TW', { hour:'2-digit', minute:'2-digit' });
-  if      (s === 'saving') { dot.className = 'sync-dot saving'; txt.textContent = '同步中…'; }
-  else if (s === 'error')  { dot.className = 'sync-dot error';  txt.textContent = '連線失敗'; }
-  else                     { dot.className = 'sync-dot';         txt.textContent = `已同步 ${now}`; }
+  if (s === 'saving') {
+    dot.className = 'sync-dot saving';
+    txt.textContent = '儲存中…';
+    if (btn) { btn.className = 'saving'; btn.textContent = '⏳ 儲存中…'; btn.disabled = true; }
+  } else if (s === 'error') {
+    dot.className = 'sync-dot error';
+    txt.textContent = '連線失敗';
+    if (btn) { btn.className = 'error'; btn.textContent = '❌ 儲存失敗'; btn.disabled = false; }
+  } else {
+    dot.className = 'sync-dot';
+    txt.textContent = `已同步 ${now}`;
+    if (btn) { btn.className = 'saved'; btn.textContent = `✅ 已儲存 ${now}`; btn.disabled = false;
+      setTimeout(() => { btn.className = ''; btn.textContent = '💾 儲存'; }, 3000); }
+  }
+}
+
+async function manualSave() {
+  clearTimeout(saveTimer);
+  await pushData();
 }
 function setOffline(v) {
   document.getElementById('offlineBar').classList.toggle('show', v);
